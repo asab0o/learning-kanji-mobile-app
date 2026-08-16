@@ -1,9 +1,5 @@
 {
-  "enabledPlugins": {
-    "expo@claude-plugins-official": true
-  },
   "permissions": {
-    "defaultMode": "plan",
     "allow": [
       "Edit(./claude/*)",
       "Write(./claude/*)",
@@ -34,11 +30,6 @@
       "Bash(wc:*)",
       "Bash(mkdir:*)"
     ],
-    "ask": [
-      "Bash(git add:*)",
-      "Bash(git push *)",
-      "Bash(git commit *)"
-    ],
     "deny": [
       "Read(.env)",
       "Bash(rm -rf *)",
@@ -52,7 +43,13 @@
       "Bash(git clean:*)",
       "Bash(rm -rf:*)",
       "Bash(pnpm audit --fix:*)"
-    ]
+    ],
+    "ask": [
+      "Bash(git add:*)",
+      "Bash(git push *)",
+      "Bash(git commit *)"
+    ],
+    "defaultMode": "plan"
   },
   "hooks": {
     "PostToolUse": [
@@ -78,5 +75,9 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "expo@claude-plugins-official": true,
+    "RevenueCat@RevenueCat": true
   }
 }
