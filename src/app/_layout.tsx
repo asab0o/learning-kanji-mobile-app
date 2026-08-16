@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+
+import { configurePurchases } from '@/features/paywall';
 
 /**
  * ルートレイアウト。
@@ -7,5 +10,9 @@ import { Stack } from 'expo-router';
  * テーマの Provider は src/theme/ を作るときにここへ差し込む。
  */
 export default function RootLayout() {
+  useEffect(() => {
+    configurePurchases();
+  }, []);
+
   return <Stack screenOptions={{ headerShown: false }} />;
 }
