@@ -52,13 +52,8 @@ export const sakura: Theme = {
     },
   },
 
-  // 質感(空のグラデーション＋紙の粒感)だけを担う生成画像。
-  // 桜のモチーフは含まれておらず、花びら・軌跡は下の motif が描く。
-  // 生成プロンプトは docs/テーマ背景プロンプト定義.md。
-  backdrop: { source: require('@/assets/themes/sakura/backdrop.png'), opacity: 0.35 },
-
-  // 花びら・落下の軌跡はコード側(react-native-svg)で描く。
-  // 生成AIに厳密な指示で描かせると誤読が繰り返し起きたため、色をトークンと
-  // 厳密に一致させる必要があるこの部分だけ切り出した。経緯は ADR-0004 参照。
-  motif: 'sakuraPetals',
+  // 全画面に敷く生成画像。空のグラデーション・紙の粒感に加えて、
+  // 花びらと落下の軌跡もこの1枚に含まれている。
+  // 生成プロンプトと不透明度の決め方は docs/テーマ背景プロンプト定義.md。
+  backdrop: { source: require('@/assets/themes/sakura/backdrop.png'), opacity: 1 },
 };

@@ -60,10 +60,6 @@ describe('themes', () => {
     expect(theme.backdrop.opacity).toBeLessThanOrEqual(1);
   });
 
-  it.each(entries)('%s: ベクター装飾は未設定か、既知の識別子', (_key, theme) => {
-    expect([null, 'sakuraPetals']).toContain(theme.motif);
-  });
-
   // architecture.md「片方のテーマにしかないキーを作らない」の実行時の担保。
   // 型でも縛っているが、将来テーマを増やしたときに as で押し込むのを防ぐ。
   //

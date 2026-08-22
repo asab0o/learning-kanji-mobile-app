@@ -81,12 +81,4 @@ export interface Theme {
    * 要件5.3 の通りテーマにつき1〜2枚まで、薄く敷く。
    */
   backdrop: { source: ImageSourcePropType; opacity: number } | null;
-  /**
-   * 全画面に敷くベクター装飾(react-native-svg)。テーマ専用の識別子、無ければ null。
-   *
-   * 座標や角度などの図形データはここに持たせず、対応する
-   * `src/theme/motifs/` のコンポーネントにハードコードする。
-   * トークンが持つのは「どのモチーフを使うか」の識別子だけ。
-   */
-  motif: 'sakuraPetals' | null;
 }
