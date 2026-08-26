@@ -36,6 +36,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# jest --coverage の出力
+coverage/
+
 example
 
 # generated native folders

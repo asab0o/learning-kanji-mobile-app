@@ -1,29 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ThemePreview } from '@/features/reading';
 
 /**
  * 仮の入口画面。実際の学習フローは docs/plans/ の承認済みプランに沿って実装する。
  *
- * ここに色を直接書かないこと(CLAUDE.md 絶対規則 1)。
- * 配色は src/theme/ のトークンを作ってから theme.* 経由で参照する。
+ * 今はテーマの見た目を実機で確認するためのプレビューを出しているだけ。
+ * 本物の会話画面ができたら差し替える。
  */
 export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Kanji app</Text>
-      <Text>Setup complete. Screens come next.</Text>
-    </View>
-  );
+  return <ThemePreview />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-});

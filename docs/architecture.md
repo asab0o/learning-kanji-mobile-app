@@ -74,12 +74,26 @@ const theme = useTheme();
 <View style={{ backgroundColor: theme.background }} />
 ```
 
-トークン名は `background` / `surface` / `text` / `textMuted` / `accent` / `kunBranch` / `onBranch` /
-`border` を基本セットとし、テーマ3種(normal / sakura / tokyoNight)が同じキーを全部持つ。
-片方のテーマにしかないキーを作らない(型で縛る)。
+色トークンは `background` / `surface` / `surfaceAlt` / `surfaceVeil` / `text` / `textMuted` /
+`accent` / `onAccent` / `border` / `kunBranch` / `onBranch`。
+**色はフラットに置く**(`theme.color.background` のようにネストしない)。
+
+色以外は `radius`(bubble / card / pill)、`type`(mincho / minchoBold / jaSize / jaLineHeight)、
+`shadow`(bubble)、`backdrop`(全画面に敷く背景装飾。未用意なら null)にまとめる。
+定義は `src/theme/tokens.ts`。
+
+全テーマが同じキーを全部持つ。片方のテーマにしかないキーを作らない。
+`themes` は `Record<ThemeId, Theme>` なので、IDを増やすと定義漏れが型エラーになる。
+`src/theme/themes.test.ts` が実行時にもキー集合の一致を見ている。
 
 `kunBranch`(訓読み=緑系)と `onBranch`(音読み=青系)をトークンに含めているのは、
 漢字の樹の色分けが差別化ポイントに直結するため、テーマを変えても意味が壊れないようにするため。
+
+現在定義済みのテーマは **`sakura` のみ**。要件定義書 5.3 が想定する残り2種
+(ノーマル / 東京の夜景)はデザイン未確定のため `ThemeId` にも入れていない(ADR-0004)。
+
+`ThemeProvider` は選択状態を持たず、表示するテーマを props で受ける。
+テーマの選択は `user_settings`(SQLite)が持ち、それを読んだ側が渡す。
 
 ## ナビゲーション
 
@@ -95,6 +109,7 @@ expo-router のファイルベース。`src/app/` にはルーティングと画
 
 - 漢字イラスト: 背景透過PNG、テーマ非依存、`assets/kanji/<漢字>.png`
 - キャラアイコン: `assets/characters/{mia,grandma,sora}.png`
-- テーマ背景装飾: `assets/themes/<theme>/*.png`(合計3〜6枚まで)
+- テーマ背景装飾: `assets/themes/<theme>/*.png`(合計3〜6枚まで)。
+  ルートレイアウトで1度だけ敷き、各画面の背景は透明にする(要件5.3「全画面で使い回す」)
 
 アセットの追加は要件定義書 5.3 / 5.4 の枚数上限を超えないこと。超えると制作が破綻する。
