@@ -49,3 +49,6 @@ example
 .claude/.state/
 
 .claude/settings.local.json
+
+# test coverage
+coverage/
