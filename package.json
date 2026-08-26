@@ -52,6 +52,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "check": "bash scripts/check.sh",
+    "remote": "bash scripts/remote-control.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

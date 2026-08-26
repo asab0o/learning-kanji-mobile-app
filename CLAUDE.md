@@ -66,6 +66,7 @@ pnpm run lint         # eslint
 pnpm run test         # jest
 pnpm run validate:content
 pnpm run db:generate  # drizzle-kit でマイグレーション生成
+pnpm run remote       # スマホの Claude アプリから作業する Remote Control セッション
 ```
 
 `pnpm exec expo start` は起動しっぱなしになるので、動作確認は iOS シミュレータの
