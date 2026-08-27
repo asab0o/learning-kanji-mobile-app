@@ -11,7 +11,7 @@ Drizzle ORM + expo-sqlite。設計の背景は `docs/data-model.md`。
 
    | 区分 | テーブル |
    |---|---|
-   | コンテンツ(同梱・同期不要) | `kanji`, `words`, `sentences`, `sentence_lines` |
+   | コンテンツ(同梱・同期不要) | `kanji`, `words`, `sentences`, `sentence_lines`, `content_meta` |
    | ユーザー状態(将来の同期対象) | `review_events`, `quiz_attempts`, `user_settings`, `reveal_shown` |
 
 4. **`review_events` は INSERT のみ。** UPDATE / DELETE を書かない。
