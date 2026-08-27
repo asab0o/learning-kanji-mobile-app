@@ -147,6 +147,29 @@ export function checkUniqueIds({ kanji, words, sentences }: ContentSet): Issue[]
   return issues;
 }
 
+/**
+ * 同じ漢字を2度登録していないこと。
+ *
+ * DB の `kanji` 表は `character` に UNIQUE を張っている(docs/data-model.md)。
+ * ここで弾かないと、検証は通るのにシードだけが UNIQUE 制約違反で落ち、
+ * 全ユーザーが起動できなくなる。DB の制約とコンテンツ検証を非対称にしないためのルール。
+ */
+export function checkUniqueKanjiCharacters({ kanji }: ContentSet): Issue[] {
+  const issues: Issue[] = [];
+  const seen = new Set<string>();
+
+  for (const entry of kanji) {
+    if (seen.has(entry.character)) {
+      issues.push(
+        err('unique-kanji-characters', `漢字が重複しています: ${entry.character} (${entry.id})`),
+      );
+    }
+    seen.add(entry.character);
+  }
+
+  return issues;
+}
+
 /** order が 1..N の重複なし連番であること */
 export function checkOrderSequence({ kanji, sentences }: ContentSet): Issue[] {
   const issues: Issue[] = [];
@@ -657,6 +680,7 @@ export function collectUnlearnedKanjiUsage(content: ContentSet): UnlearnedUsage[
 const RULES = [
   // error — 壊れると差別化機能が成立しない
   checkUniqueIds,
+  checkUniqueKanjiCharacters,
   checkOrderSequence,
   checkNewKanjiPerSentence,
   checkReencounterKanjiTaught,

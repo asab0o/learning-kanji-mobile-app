@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import {
   DefaultTheme as NavigationDefaultTheme,
   Stack,
@@ -8,6 +8,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { useDatabase } from '@/db';
 import { configurePurchases } from '@/features/paywall';
 import { ThemeBackdrop, ThemeProvider, useTheme } from '@/theme';
 
@@ -54,6 +55,7 @@ export default function RootLayout() {
  */
 function ThemedShell() {
   const theme = useTheme();
+  const database = useDatabase();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -64,14 +66,50 @@ function ThemedShell() {
       */}
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
       <ThemeBackdrop />
-      <NavigationThemeProvider value={TRANSPARENT_NAVIGATION_THEME}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: 'transparent' },
-          }}
-        />
-      </NavigationThemeProvider>
+      {/*
+        マイグレーションとシードが終わるまで画面を出さない。
+        用意できていないテーブルにクエリを投げると落ちるため。
+        待っている間はテーマの地と背景装飾だけが見える(スプラッシュからの繋ぎになる)。
+      */}
+      {database.status === 'error' ? (
+        <DatabaseError message={database.error?.message ?? 'Unknown error'} />
+      ) : database.status === 'ready' ? (
+        <NavigationThemeProvider value={TRANSPARENT_NAVIGATION_THEME}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: 'transparent' },
+            }}
+          />
+        </NavigationThemeProvider>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * DB を用意できなかったときの最終手段の表示。
+ *
+ * 何も出さないと白い画面のまま固まって原因が分からなくなるので、
+ * 少なくとも「DB で失敗した」ことは出す。
+ *
+ * **例外の本文を本番で画面に出さない。** DB 層が投げる例外の文言は日本語なので
+ * (`@/db/mappers` の RowError など)、そのまま出すと絶対規則7(UI文言は英語)を破る。
+ * 原因は常に console に落とし、画面に出すのは開発ビルドのときだけにする。
+ */
+function DatabaseError({ message }: { message: string }) {
+  const theme = useTheme();
+
+  console.error('[db] could not prepare the database:', message);
+
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 }}>
+      <Text style={{ color: theme.text, fontSize: 17, textAlign: 'center' }}>
+        Could not prepare the app’s data. Please reinstall the app.
+      </Text>
+      {__DEV__ ? (
+        <Text style={{ color: theme.textMuted, fontSize: 13, textAlign: 'center' }}>{message}</Text>
+      ) : null}
     </View>
   );
 }

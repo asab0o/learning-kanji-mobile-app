@@ -11,6 +11,7 @@ import {
   checkSoraInteraction,
   checkSoraSpeechRule,
   checkUniqueIds,
+  checkUniqueKanjiCharacters,
   checkWordReferences,
   collectUnlearnedKanjiUsage,
   extractKanji,
@@ -477,6 +478,26 @@ describe('checkUniqueIds', () => {
     expect(
       checkUniqueIds(content({ kanji: [kanji('dup', '空', 1), kanji('dup', '見', 2)] }))
     ).toHaveLength(1);
+  });
+});
+
+describe('checkUniqueKanjiCharacters', () => {
+  it('同じ漢字を2度登録すると落ちる', () => {
+    // DB 側の kanji.character UNIQUE と対になるルール。
+    // ここで弾かないと、検証は通るのにシードだけが落ちて起動できなくなる
+    expect(
+      checkUniqueKanjiCharacters(
+        content({ kanji: [kanji('k1', '空', 1), kanji('k2', '空', 2)] })
+      )
+    ).toHaveLength(1);
+  });
+
+  it('別々の漢字なら通る', () => {
+    expect(
+      checkUniqueKanjiCharacters(
+        content({ kanji: [kanji('k1', '空', 1), kanji('k2', '見', 2)] })
+      )
+    ).toHaveLength(0);
   });
 });
 
