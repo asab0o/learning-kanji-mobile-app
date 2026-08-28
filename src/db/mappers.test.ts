@@ -3,6 +3,7 @@ import {
   parseThemeId,
   toKanjiEntry,
   toKanjiRow,
+  toLine,
   toSentence,
   toSentenceLineRow,
   toSentenceRow,
@@ -42,7 +43,13 @@ function asSelectedSentence(row: typeof sentences.$inferInsert): typeof sentence
 }
 
 function asSelectedLine(row: typeof sentenceLines.$inferInsert): typeof sentenceLines.$inferSelect {
-  return { ...row, createdAt: NOW, updatedAt: NOW };
+  // segments はスキーマ側に既定値があるため $inferInsert では省略可能になる。
+  // 実際には toSentenceLineRow が必ず入れるので、入っていなければテストを落とす。
+  if (row.segments === undefined) {
+    throw new Error('toSentenceLineRow が segments を入れていません');
+  }
+
+  return { ...row, segments: row.segments, createdAt: NOW, updatedAt: NOW };
 }
 
 function kanjiRow(overrides: Partial<typeof kanji.$inferSelect> = {}): typeof kanji.$inferSelect {
@@ -102,7 +109,7 @@ function lineRow(
     lineIndex: 0,
     speaker: 'grandma',
     japanese: 'いらっしゃい。',
-    furigana: 'いらっしゃい。',
+    segments: '[{"text":"いらっしゃい。"}]',
     romaji: 'Irasshai.',
     english: 'Welcome.',
     createdAt: NOW,
@@ -194,6 +201,27 @@ describe('toSentence', () => {
   });
 });
 
+describe('toLine', () => {
+  it('segments の JSON を LineSegment[] に戻す', () => {
+    const line = toLine(lineRow({ segments: '[{"text":"歩","reading":"ある"},{"text":"く"}]' }));
+
+    expect(line.segments).toEqual([{ text: '歩', reading: 'ある' }, { text: 'く' }]);
+  });
+
+  it('segments が壊れた JSON なら行 ID と列名を含むエラーで落ちる', () => {
+    expect(() => toLine(lineRow({ segments: '{' }))).toThrow(/segments/);
+    expect(() => toLine(lineRow({ segments: '{' }))).toThrow(/01J0000000000000000000LIN0/);
+  });
+
+  it('segments が配列でなければ落ちる', () => {
+    expect(() => toLine(lineRow({ segments: '{"text":"歩"}' }))).toThrow(/segments/);
+  });
+
+  it('segments の要素が LineSegment の形でなければ位置を含むエラーで落ちる', () => {
+    expect(() => toLine(lineRow({ segments: '[{"reading":"ある"}]' }))).toThrow(/segments\[0\]/);
+  });
+});
+
 describe('行への変換', () => {
   it('KanjiEntry → 行 → KanjiEntry で元に戻る', () => {
     const entry: KanjiEntry = {
@@ -239,14 +267,14 @@ describe('行への変換', () => {
         {
           speaker: 'mia',
           japanese: 'おはようございます。',
-          furigana: 'おはようございます。',
+          segments: [{ text: 'おはようございます。' }],
           romaji: 'Ohayō gozaimasu.',
           english: 'Good morning.',
         },
         {
           speaker: 'sora',
           japanese: 'ごはん',
-          furigana: 'ごはん',
+          segments: [{ text: 'ごはん' }],
           romaji: 'Gohan',
           english: 'Food.',
         },

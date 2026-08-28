@@ -12,7 +12,8 @@
  * ルール自体が誤っていると考える場合は、先に docs/content-decisions.md を直すこと。
  */
 
-import type { ChapterNumber, ContentSet, KanjiEntry, Sentence } from './types';
+import { segmentsToText } from './segments';
+import type { ChapterNumber, ContentSet, KanjiEntry, Line, Sentence } from './types';
 
 export type IssueLevel = 'error' | 'warning';
 
@@ -161,7 +162,7 @@ export function checkUniqueKanjiCharacters({ kanji }: ContentSet): Issue[] {
   for (const entry of kanji) {
     if (seen.has(entry.character)) {
       issues.push(
-        err('unique-kanji-characters', `漢字が重複しています: ${entry.character} (${entry.id})`),
+        err('unique-kanji-characters', `漢字が重複しています: ${entry.character} (${entry.id})`)
       );
     }
     seen.add(entry.character);
@@ -413,7 +414,7 @@ export function checkChapterComposition({ sentences }: ContentSet): Issue[] {
   return issues;
 }
 
-/** ふりがな・英訳の欠落(ローマ字は生成方法が未確定のため検証しない) */
+/** 日本語本文・英訳の欠落(ローマ字は生成方法が未確定のため検証しない) */
 export function checkLineFields({ sentences }: ContentSet): Issue[] {
   const issues: Issue[] = [];
   for (const s of sentences) {
@@ -424,11 +425,99 @@ export function checkLineFields({ sentences }: ContentSet): Issue[] {
     s.lines.forEach((line, i) => {
       const at = `${where(s)} の ${i + 1} 行目`;
       if (!line.japanese.trim()) issues.push(err('line-fields', `${at}: japanese が空です`));
-      if (!line.furigana.trim()) issues.push(err('line-fields', `${at}: furigana が空です`));
       if (!line.english.trim()) issues.push(err('line-fields', `${at}: english が空です`));
     });
   }
   return issues;
+}
+
+/** かな(ひらがな・長音符)だけで構成されているか */
+const KANA_ONLY = /^[ぁ-ゖゝ-ゟー]+$/;
+
+/**
+ * `Line.segments` の形の検証(docs/plans/line-segments.md)。
+ *
+ * error: 折り返し境界・読みの対応など、崩れると画面が描画できないもの。
+ * warning: 演出の質(セグメント幅・新出漢字の埋もれ)。
+ */
+export function checkLineSegments({ kanji, sentences }: ContentSet): Issue[] {
+  const issues: Issue[] = [];
+  const charById = new Map(kanji.map((k) => [k.id, k.character]));
+
+  for (const s of sentences) {
+    s.lines.forEach((line, i) => {
+      const at = `${where(s)} の ${i + 1} 行目`;
+      checkOneLineSegments(line, at, s.newKanjiId ? charById.get(s.newKanjiId) : undefined, issues);
+    });
+  }
+  return issues;
+}
+
+function checkOneLineSegments(
+  line: Line,
+  at: string,
+  newKanjiChar: string | undefined,
+  issues: Issue[]
+): void {
+  if (line.segments.length === 0) {
+    issues.push(err('line-segments', `${at}: segments が空です`));
+    return;
+  }
+
+  for (const [i, segment] of line.segments.entries()) {
+    const segmentAt = `${at} の segments[${i}]("${segment.text}")`;
+
+    if (!segment.text.trim()) {
+      issues.push(err('line-segments', `${segmentAt}: text が空です`));
+      continue;
+    }
+
+    const hasKanji = extractKanji(segment.text).length > 0;
+
+    if (hasKanji && segment.reading === undefined) {
+      issues.push(err('line-segments', `${segmentAt}: 漢字を含むのに reading がありません`));
+    } else if (segment.reading !== undefined && !KANA_ONLY.test(segment.reading)) {
+      issues.push(
+        err('line-segments', `${segmentAt}: reading "${segment.reading}" がひらがなではありません`)
+      );
+    }
+
+    if (!hasKanji && segment.reading !== undefined) {
+      issues.push(warn('line-segments', `${segmentAt}: かなだけの text に reading が付いています`));
+    }
+
+    if ([...segment.text].length > 10) {
+      issues.push(
+        warn(
+          'line-segments',
+          `${segmentAt}: 1セグメントが10字を超えています(吹き出しからはみ出す可能性)`
+        )
+      );
+    }
+
+    if (
+      newKanjiChar !== undefined &&
+      segment.text.includes(newKanjiChar) &&
+      extractKanji(segment.text).some((c) => c !== newKanjiChar)
+    ) {
+      issues.push(
+        warn(
+          'line-segments',
+          `${segmentAt}: 新出漢字 "${newKanjiChar}" が他の漢字と同じセグメントに入っています。単独のセグメントに分けるとハイライトが効きます`
+        )
+      );
+    }
+  }
+
+  const joined = segmentsToText(line.segments);
+  if (joined !== line.japanese) {
+    issues.push(
+      err(
+        'line-segments',
+        `${at}: segments を連結した文字列("${joined}")が japanese("${line.japanese}")と一致しません`
+      )
+    );
+  }
 }
 
 /**
@@ -688,6 +777,7 @@ const RULES = [
   checkFreeChapterBoundary,
   checkChapterComposition,
   checkLineFields,
+  checkLineSegments,
   checkSoraSpeechRule,
   checkWordReferences,
   // warning — 演出の質

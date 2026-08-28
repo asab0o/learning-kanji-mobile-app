@@ -41,7 +41,7 @@ function sentenceFixture(overrides: Partial<Sentence> = {}): Sentence {
       {
         speaker: 'grandma',
         japanese: 'いらっしゃい。',
-        furigana: 'いらっしゃい。',
+        segments: [{ text: 'いらっしゃい。' }],
         romaji: 'Irasshai.',
         english: 'Welcome.',
       },
