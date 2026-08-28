@@ -23,7 +23,8 @@
   `review_events` は過去のコンテンツの ID を参照したまま残るのが正しい。
   FK を張ると再シードが失敗するか、ユーザー状態が CASCADE で消える。
   コンテンツ側の参照整合性は `pnpm run validate:content` が担保する
-- **入れ子の配列は JSON テキスト列で持つ**(`kanji.readings` / `sentences.reencounters`)。
+- **入れ子の配列は JSON テキスト列で持つ**(`kanji.readings` / `sentences.reencounters` /
+  `sentence_lines.segments`)。
   常に親行と一緒に丸ごと読む値で、SQL で検索する用途が要件に無いため。
   検索したくなったら表を足すマイグレーションを後から積む
 
