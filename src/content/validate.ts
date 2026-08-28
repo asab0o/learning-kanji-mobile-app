@@ -12,6 +12,7 @@
  * ルール自体が誤っていると考える場合は、先に docs/content-decisions.md を直すこと。
  */
 
+import { ALLOWED_IN_ROMAJI } from './romaji';
 import { segmentsToText } from './segments';
 import type { ChapterNumber, ContentSet, KanjiEntry, Line, Sentence } from './types';
 
@@ -766,6 +767,73 @@ export function collectUnlearnedKanjiUsage(content: ContentSet): UnlearnedUsage[
   return usages;
 }
 
+/** ローマ字に混ざってはいけない文字を1つ返す。許可リストは変換器と共有する */
+const findForeignChar = (romaji: string): string | undefined =>
+  [...romaji].find((char) => !ALLOWED_IN_ROMAJI.test(char));
+
+/**
+ * ローマ字欄の検証(docs/plans/romaji-converter.md)。
+ *
+ * ローマ字は `pnpm run romaji` が出した下書きを人が直して貼るもので、
+ * 助詞と語境界は人の判断が入る。そのため**中身の正しさは機械で判定できない**。
+ * ここで見るのは「明らかに事故っている」形だけに絞る。
+ */
+export function checkRomaji({ kanji, sentences }: ContentSet): Issue[] {
+  const issues: Issue[] = [];
+  let missing = 0;
+
+  for (const entry of kanji) {
+    entry.readings.forEach((reading, i) => {
+      const foreign = findForeignChar(reading.romaji);
+      if (foreign !== undefined) {
+        issues.push(
+          err(
+            'romaji',
+            `漢字 ${entry.character}(${entry.id})の readings[${i}]: romaji に「${foreign}」が混ざっています("${reading.romaji}")`
+          )
+        );
+      } else if (!reading.romaji.trim()) {
+        missing += 1;
+      }
+    });
+  }
+
+  for (const s of sentences) {
+    s.lines.forEach((line, i) => {
+      const at = `${where(s)} の ${i + 1} 行目`;
+
+      const foreign = findForeignChar(line.romaji);
+      if (foreign !== undefined) {
+        issues.push(err('romaji', `${at}: romaji に「${foreign}」が混ざっています("${line.romaji}")`));
+        return;
+      }
+
+      if (!line.romaji.trim()) {
+        missing += 1;
+        return;
+      }
+
+      // 語単位の出力(小文字)を行にそのまま貼った事故を拾う
+      const firstLetter = [...line.romaji].find((c) => /\p{Letter}/u.test(c));
+      if (firstLetter !== undefined && firstLetter !== firstLetter.toUpperCase()) {
+        issues.push(
+          warn('romaji', `${at}: romaji が小文字で始まっています("${line.romaji}")`)
+        );
+      }
+    });
+  }
+
+  // 制作途中は必ず空になるので、行ごとに出さず1件にまとめる。
+  // 145 行分の警告で他のルールの指摘が埋もれるのを避ける
+  if (missing > 0) {
+    issues.push(
+      warn('romaji', `romaji 未記入が ${missing} 件あります — pnpm run romaji で下書きが出せます`)
+    );
+  }
+
+  return issues;
+}
+
 const RULES = [
   // error — 壊れると差別化機能が成立しない
   checkUniqueIds,
@@ -778,6 +846,7 @@ const RULES = [
   checkChapterComposition,
   checkLineFields,
   checkLineSegments,
+  checkRomaji,
   checkSoraSpeechRule,
   checkWordReferences,
   // warning — 演出の質

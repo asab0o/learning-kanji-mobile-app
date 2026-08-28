@@ -3,6 +3,7 @@ import {
   checkCompoundPartnerTaught,
   checkFreeChapterBoundary,
   checkLineSegments,
+  checkRomaji,
   checkNewKanjiPerSentence,
   checkOrderSequence,
   checkReadingIntroduction,
@@ -68,7 +69,7 @@ function line(japanese: string, speaker: Line['speaker'] = 'mia', segments?: Lin
     speaker,
     japanese,
     segments: segments ?? [{ text: japanese }],
-    romaji: 'romaji',
+    romaji: 'Romaji.',
     english: 'english',
   };
 }
@@ -728,6 +729,130 @@ describe('collectUnlearnedKanjiUsage', () => {
 
   it('既習の字は集計に入らない', () => {
     expect(usages.some((u) => u.character === '日')).toBe(false);
+  });
+});
+
+// --- checkRomaji ----------------------------------------------------------
+
+describe('checkRomaji', () => {
+  it('未記入だけならエラーは出ず、警告1件にまとまる', () => {
+    const issues = checkRomaji(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [{ ...line('あ'), romaji: '' }],
+          }),
+        ],
+      })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(0);
+    expect(warningsOf(issues)).toHaveLength(1);
+  });
+
+  it('未記入が3件でも警告は1件にまとまり、件数が入る', () => {
+    const issues = checkRomaji(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [
+              { ...line('あ'), romaji: '' },
+              { ...line('い'), romaji: '' },
+              { ...line('う'), romaji: '' },
+            ],
+          }),
+        ],
+      })
+    );
+
+    expect(warningsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('3 件');
+  });
+
+  it('日本語が混ざっていたらエラー。会話文 ID と行番号が入る', () => {
+    const issues = checkRomaji(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [{ ...line('この家は'), romaji: 'Kono ie は wa' }],
+          }),
+        ],
+      })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].rule).toBe('romaji');
+    expect(issues[0].message).toContain('s1');
+    expect(issues[0].message).toContain('1 行目');
+  });
+
+  it('漢字の読みのローマ字に日本語が混ざっていてもエラー', () => {
+    const issues = checkRomaji(
+      content({
+        kanji: [
+          kanji('k1', '空', 1, 1, {
+            readings: [{ kana: 'くう', romaji: 'くう', type: 'on' }],
+          }),
+        ],
+      })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('空');
+  });
+
+  it('小文字で始まる行は警告(語単位の出力をそのまま貼った事故)', () => {
+    const lowercase = checkRomaji(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [{ ...line('あ'), romaji: 'takusan arukimashita ne.' }],
+          }),
+        ],
+      })
+    );
+
+    expect(warningsOf(lowercase)).toHaveLength(1);
+  });
+
+  it('大文字で始まっていれば警告を出さない', () => {
+    const issues = checkRomaji(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [{ ...line('あ'), romaji: 'Takusan arukimashita ne.' }],
+          }),
+        ],
+      })
+    );
+
+    expect(issues).toHaveLength(0);
+  });
+
+  it('マクロンで始まる行も大文字とみなす', () => {
+    const issues = checkRomaji(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [{ ...line('あ'), romaji: 'Ōkikute...' }],
+          }),
+        ],
+      })
+    );
+
+    expect(issues).toHaveLength(0);
   });
 });
 
