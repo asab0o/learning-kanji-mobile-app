@@ -67,12 +67,31 @@ export interface Word {
   encounteredInSentenceId: string | null;
 }
 
+/**
+ * ふりがな付き本文の最小単位。折り返しはこの境界でしか起きない
+ * (`src/features/reading/furigana.tsx` の制約)。
+ *
+ * `src/content/` 側に置いているのは、`FuriganaSegment`(features 側の型)を
+ * ここが import すると `content → features` という逆方向の依存になるため
+ * (docs/architecture.md のレイヤ順は `app → features → {db, content}`)。
+ * `FuriganaSegment` はこちらを取り込んで `focus` を足す形にする。
+ */
+export interface LineSegment {
+  /** 表示する本文(japanese の一部) */
+  text: string;
+  /** text 全体に乗る読み。かなだけのセグメントでは省略する */
+  reading?: string;
+}
+
 export interface Line {
   speaker: CharacterId;
-  /** 日本語本文 */
+  /**
+   * 日本語本文。`segments` を連結したものと一致すること
+   * (`checkLineSegments` が機械的に検証する)。
+   */
   japanese: string;
-  /** ふりがな(ひらがな全文) */
-  furigana: string;
+  /** ふりがな付き本文。画面はこれをそのまま FuriganaText に渡す */
+  segments: LineSegment[];
   /** ヘボン式ローマ字 */
   romaji: string;
   english: string;

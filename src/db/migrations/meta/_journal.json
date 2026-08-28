@@ -8,6 +8,13 @@
       "when": 1787786872819,
       "tag": "0000_lethal_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787913591724,
+      "tag": "0001_polite_sandman",
+      "breakpoints": true
     }
   ]
 }

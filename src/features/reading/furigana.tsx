@@ -1,14 +1,21 @@
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import type { LineSegment } from '@/content/types';
 import { furiganaMetrics } from '@/features/reading/furigana-metrics';
 import { useTheme } from '@/theme/theme-context';
 
-export type FuriganaSegment = {
-  /** 表示する本文。 */
-  text: string;
-  /** 上に添える読み。不要なら省略する。 */
-  reading?: string;
-  /** その回で学習中の漢字。テーマの accent でハイライトする。 */
+/**
+ * 表示用のセグメント。
+ *
+ * 本文と読みはコンテンツが持つ形(`LineSegment`)をそのまま使い、
+ * ここでは表示状態の `focus` だけを足す。逆に `LineSegment` 側へ `focus` を
+ * 入れないのは、光らせる字が場面によって変わるため(要件定義書 4.6)。
+ * ステップ1では新出漢字を、第2段階の演出では読みが変わる字を光らせるので、
+ * どの字を光らせるかはデータではなく画面が決める。
+ * 付け方は `@/features/reading/segments` の `toFuriganaSegments`。
+ */
+export type FuriganaSegment = LineSegment & {
+  /** いまハイライトする字を含むセグメント。テーマの accent で描く。 */
   focus?: boolean;
 };
 

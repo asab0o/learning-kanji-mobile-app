@@ -11,6 +11,7 @@ import type {
   ChapterNumber,
   KanjiEntry,
   Line,
+  LineSegment,
   Reading,
   ReadingType,
   Reencounter,
@@ -80,7 +81,7 @@ export function toLine(row: SentenceLineRow): Line {
   return {
     speaker: row.speaker,
     japanese: row.japanese,
-    furigana: row.furigana,
+    segments: parseSegments(row.id, row.segments),
     romaji: row.romaji,
     english: row.english,
   };
@@ -134,14 +135,17 @@ export function toSentenceRow(sentence: Sentence, now: number): typeof sentences
 export function toSentenceLineRow(
   params: { id: string; sentenceId: string; lineIndex: number; line: Line },
   now: number
-): typeof sentenceLines.$inferInsert {
+  // `segments` はスキーマ側に既定値があるため $inferInsert では省略可能になる。
+  // 既定値はマイグレーションのためだけのもので、シードが入れ忘れてよい列ではないので、
+  // ここで必須に締め直す(入れ忘れると型で落ちる)。
+): typeof sentenceLines.$inferInsert & { segments: string } {
   return {
     id: params.id,
     sentenceId: params.sentenceId,
     lineIndex: params.lineIndex,
     speaker: params.line.speaker,
     japanese: params.line.japanese,
-    furigana: params.line.furigana,
+    segments: JSON.stringify(params.line.segments),
     romaji: params.line.romaji,
     english: params.line.english,
     createdAt: now,
@@ -226,6 +230,36 @@ function parseReencounters(id: string, raw: string): Reencounter[] {
     }
     return item;
   });
+}
+
+function parseSegments(id: string, raw: string): LineSegment[] {
+  const parsed = parseJson('sentence_lines', id, 'segments', raw);
+
+  if (!Array.isArray(parsed)) {
+    throw new RowError('sentence_lines', id, 'segments', '配列ではありません');
+  }
+
+  return parsed.map((item, index) => {
+    if (!isLineSegment(item)) {
+      throw new RowError(
+        'sentence_lines',
+        id,
+        `segments[${index}]`,
+        'LineSegment の形ではありません'
+      );
+    }
+    return item;
+  });
+}
+
+function isLineSegment(value: unknown): value is LineSegment {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return (
+    typeof value.text === 'string' &&
+    (value.reading === undefined || typeof value.reading === 'string')
+  );
 }
 
 function isReading(value: unknown): value is Reading {

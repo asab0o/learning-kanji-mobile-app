@@ -2,6 +2,7 @@ import {
   checkChapterComposition,
   checkCompoundPartnerTaught,
   checkFreeChapterBoundary,
+  checkLineSegments,
   checkNewKanjiPerSentence,
   checkOrderSequence,
   checkReadingIntroduction,
@@ -17,7 +18,16 @@ import {
   extractKanji,
   validateContent,
 } from './validate';
-import type { ChapterNumber, ContentSet, KanjiEntry, Line, Reading, Sentence, Word } from './types';
+import type {
+  ChapterNumber,
+  ContentSet,
+  KanjiEntry,
+  Line,
+  LineSegment,
+  Reading,
+  Sentence,
+  Word,
+} from './types';
 
 // --- フィクスチャ ---------------------------------------------------------
 
@@ -46,8 +56,21 @@ function kanji(
   };
 }
 
-function line(japanese: string, speaker: Line['speaker'] = 'mia'): Line {
-  return { speaker, japanese, furigana: 'ふりがな', romaji: 'furigana', english: 'english' };
+/**
+ * checkLineSegments 以外のルールを対象にしたテストでは、segments の中身までは
+ * 検証されない(各 describe が個別のルール関数しか呼ばないため)。
+ * 既定は「japanese 全体を1セグメント・reading なし」にし、japanese との
+ * 連結一致だけは常に保っておく。segments 自体を検証したいテストは
+ * segments を明示的に渡す(下の checkLineSegments の describe を参照)。
+ */
+function line(japanese: string, speaker: Line['speaker'] = 'mia', segments?: LineSegment[]): Line {
+  return {
+    speaker,
+    japanese,
+    segments: segments ?? [{ text: japanese }],
+    romaji: 'romaji',
+    english: 'english',
+  };
 }
 
 function sentence(overrides: Partial<Sentence> & Pick<Sentence, 'id' | 'order'>): Sentence {
@@ -401,6 +424,166 @@ describe('checkCompoundPartnerTaught', () => {
   });
 });
 
+describe('checkLineSegments', () => {
+  it('segments を連結すると japanese と一致する行はエラーなし', () => {
+    const issues = checkLineSegments(
+      content({
+        kanji: [kanji('k-aruku', '歩', 1)],
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            newKanjiId: 'k-aruku',
+            lines: [
+              line('たくさん歩きましたね。', 'mia', [
+                { text: 'たくさん' },
+                { text: '歩', reading: 'ある' },
+                { text: 'きましたね。' },
+              ]),
+            ],
+          }),
+        ],
+      })
+    );
+    expect(issues).toEqual([]);
+  });
+
+  it('segments が japanese と一致しなければエラー', () => {
+    const issues = checkLineSegments(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [
+              line('たくさん歩きましたね。', 'mia', [
+                { text: 'たくさん' },
+                { text: '歩', reading: 'ある' },
+                // 「きましたね。」が欠けている
+              ]),
+            ],
+          }),
+        ],
+      })
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0].level).toBe('error');
+    expect(issues[0].message).toContain('一致しません');
+    // どの文のどの行かが分からないと直せないので、書式が変わったら気づけるようにする
+    expect(issues[0].message).toContain('s1');
+    expect(issues[0].message).toContain('1 行目');
+  });
+
+  it('漢字を含むのに reading がなければエラー', () => {
+    const issues = checkLineSegments(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [line('歩く', 'mia', [{ text: '歩' }, { text: 'く' }])],
+          }),
+        ],
+      })
+    );
+    expect(
+      issues.some((i) => i.level === 'error' && i.message.includes('reading がありません'))
+    ).toBe(true);
+  });
+
+  it('reading がカタカナだとエラー', () => {
+    const issues = checkLineSegments(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [line('歩く', 'mia', [{ text: '歩', reading: 'アル' }, { text: 'く' }])],
+          }),
+        ],
+      })
+    );
+    expect(
+      issues.some((i) => i.level === 'error' && i.message.includes('ひらがなではありません'))
+    ).toBe(true);
+  });
+
+  it('かなだけの text に reading が付いていると警告(エラーにはしない)', () => {
+    const issues = checkLineSegments(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [line('たくさん', 'mia', [{ text: 'たくさん', reading: 'たくさん' }])],
+          }),
+        ],
+      })
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0].level).toBe('warning');
+  });
+
+  it('10字を超えるセグメントは警告、10字ちょうどは警告しない', () => {
+    const ten = 'あ'.repeat(10);
+    const eleven = 'あ'.repeat(11);
+
+    const issuesTen = checkLineSegments(
+      content({
+        sentences: [sentence({ id: 's1', order: 1, lines: [line(ten, 'mia', [{ text: ten }])] })],
+      })
+    );
+    expect(issuesTen).toEqual([]);
+
+    const issuesEleven = checkLineSegments(
+      content({
+        sentences: [
+          sentence({ id: 's1', order: 1, lines: [line(eleven, 'mia', [{ text: eleven }])] }),
+        ],
+      })
+    );
+    expect(issuesEleven).toHaveLength(1);
+    expect(issuesEleven[0].level).toBe('warning');
+    expect(issuesEleven[0].message).toContain('10字を超えて');
+  });
+
+  it('新出漢字が他の漢字と同じセグメントに入っていると警告', () => {
+    const issues = checkLineSegments(
+      content({
+        kanji: [kanji('k-hi', '日', 1)],
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            newKanjiId: 'k-hi',
+            lines: [line('今日', 'mia', [{ text: '今日', reading: 'きょう' }])],
+          }),
+        ],
+      })
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0].level).toBe('warning');
+    expect(issues[0].message).toContain('他の漢字と同じセグメント');
+  });
+
+  it('新出漢字だけの単独セグメントなら警告しない', () => {
+    const issues = checkLineSegments(
+      content({
+        kanji: [kanji('k-hi', '日', 1)],
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            newKanjiId: 'k-hi',
+            lines: [line('日', 'mia', [{ text: '日', reading: 'ひ' }])],
+          }),
+        ],
+      })
+    );
+    expect(issues).toEqual([]);
+  });
+});
+
 // --- 構造 -----------------------------------------------------------------
 
 describe('checkNewKanjiPerSentence', () => {
@@ -486,17 +669,13 @@ describe('checkUniqueKanjiCharacters', () => {
     // DB 側の kanji.character UNIQUE と対になるルール。
     // ここで弾かないと、検証は通るのにシードだけが落ちて起動できなくなる
     expect(
-      checkUniqueKanjiCharacters(
-        content({ kanji: [kanji('k1', '空', 1), kanji('k2', '空', 2)] })
-      )
+      checkUniqueKanjiCharacters(content({ kanji: [kanji('k1', '空', 1), kanji('k2', '空', 2)] }))
     ).toHaveLength(1);
   });
 
   it('別々の漢字なら通る', () => {
     expect(
-      checkUniqueKanjiCharacters(
-        content({ kanji: [kanji('k1', '空', 1), kanji('k2', '見', 2)] })
-      )
+      checkUniqueKanjiCharacters(content({ kanji: [kanji('k1', '空', 1), kanji('k2', '見', 2)] }))
     ).toHaveLength(0);
   });
 });

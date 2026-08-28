@@ -114,8 +114,18 @@ export const sentenceLines = sqliteTable(
     /** 会話文の中での並び。0 始まり */
     lineIndex: integer('line_index').notNull(),
     speaker: text('speaker', { enum: ['mia', 'grandma', 'sora'] }).notNull(),
+    /** segments を連結したものと一致する(検証は content 側の checkLineSegments) */
     japanese: text('japanese').notNull(),
-    furigana: text('furigana').notNull(),
+    /**
+     * `LineSegment[]` の JSON。理由は kanji.readings と同じ(docs/plans/line-segments.md)。
+     *
+     * 既定値 `'[]'` は**マイグレーションのため**に付けている。SQLite は行が入っている表に
+     * 既定値なしの NOT NULL 列を追加できず(`Cannot add a NOT NULL column with default
+     * value NULL`)、0001 が適用できない端末が出るため。
+     * シードは常に値を明示的に入れるので、この既定値が実際に使われる経路は無い
+     * (`toSentenceLineRow` の往復テストが入れ忘れを捕まえる)。
+     */
+    segments: text('segments').notNull().default('[]'),
     romaji: text('romaji').notNull(),
     english: text('english').notNull(),
     ...timestamps,
