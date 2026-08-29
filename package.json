@@ -60,6 +60,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "validate:content": "tsx scripts/validate-content.ts",
+    "romaji": "tsx scripts/romaji.ts",
     "db:generate": "drizzle-kit generate"
   },
   "jest": {
