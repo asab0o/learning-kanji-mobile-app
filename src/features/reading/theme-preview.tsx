@@ -1,6 +1,8 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { CharacterId } from '@/content/types';
+import { CharacterAvatar } from '@/features/reading/character-avatar';
 import { FuriganaText, type FuriganaSegment } from '@/features/reading/furigana';
 import { useTheme } from '@/theme/theme-context';
 
@@ -52,7 +54,7 @@ export function ThemePreview() {
 
       <View style={styles.thread}>
         <Bubble
-          avatar="ミ"
+          speaker="mia"
           side="right"
           segments={[
             { text: 'たくさん' },
@@ -62,7 +64,7 @@ export function ThemePreview() {
           translation="We've walked a lot."
         />
         <Bubble
-          avatar="祖"
+          speaker="grandma"
           side="left"
           segments={[
             { text: '毎日', reading: 'まいにち' },
@@ -129,13 +131,13 @@ export function ThemePreview() {
 }
 
 type BubbleProps = {
-  avatar: string;
+  speaker: CharacterId;
   side: 'left' | 'right';
   segments: FuriganaSegment[];
   translation: string;
 };
 
-function Bubble({ avatar, side, segments, translation }: BubbleProps) {
+function Bubble({ speaker, side, segments, translation }: BubbleProps) {
   const theme = useTheme();
   const isRight = side === 'right';
 
@@ -144,17 +146,7 @@ function Bubble({ avatar, side, segments, translation }: BubbleProps) {
     // 「吹き出し＋英訳」の下端に揃ってしまい、アバターが英訳の高さまで下がる。
     <View style={isRight ? styles.turnRight : styles.turnLeft}>
       <View style={[styles.bubbleRow, isRight && styles.bubbleRowRight]}>
-        <View style={[styles.avatar, { backgroundColor: theme.surfaceAlt }]}>
-          <Text
-            style={{
-              fontFamily: theme.type.minchoBold,
-              fontSize: 12.5,
-              color: theme.text,
-            }}
-          >
-            {avatar}
-          </Text>
-        </View>
+        <CharacterAvatar character={speaker} size={AVATAR_SIZE} />
         <View
           style={[
             styles.bubble,
@@ -231,13 +223,6 @@ const styles = StyleSheet.create({
   },
   bubbleRowRight: {
     flexDirection: 'row-reverse',
-  },
-  avatar: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   bubble: {
     maxWidth: 236,
