@@ -62,7 +62,10 @@ export interface Word {
   readingType: ReadingType;
   /**
    * この語に出会った会話文の ID。
-   * null なら未出会い = 灰色のつぼみとして表示される(要件定義書 4.5)
+   * null なら未出会い = 灰色のつぼみとして表示される(要件定義書 4.5)。
+   *
+   * 語が導入回より前の回にも出ている場合(`家` は #1 に出るが導入は #10)は**導入回**を指す。
+   * その字の樹は導入するまで見えないので、導入前の出現を指しても葉は光らないため。
    */
   encounteredInSentenceId: string | null;
 }
@@ -119,7 +122,10 @@ export interface Sentence {
   chapter: ChapterNumber;
   /** 通し順。1 から始まる連番 */
   order: number;
-  /** シーン名(カフェ、台所 など) */
+  /**
+   * シーン名(カフェ、台所 など)。**内部メタデータで画面には出さない**ため日本語のまま。
+   * UI に出すなら絶対規則7(UI文言は英語)に合わせて英語に倒すこと。
+   */
   scene: string;
   lines: Line[];
   /**
