@@ -48,9 +48,25 @@ RevenueCatダッシュボード側(プロジェクト・iOSアプリ・Test Stor
 - [x] `fetchOfferings()`が`Purchases.getOfferings()`の戻り値をそのまま返す
 - [x] `_layout.tsx`はマウント時に1回だけ`configurePurchases()`を呼び、画面ロジックは増えていない
 - [x] `pnpm run check`(typecheck/lint/test/content)が通る
-- [ ] iOSシミュレータでネイティブビルドし、`fetchOfferings()`の`current.availablePackages`に
-      `$rc_monthly`が1件返ることを確認する(`ios/`未生成のため未実施。次回の実機/シミュレータ
-      確認作業として残す)
+- [x] iOSシミュレータでネイティブビルドし、`fetchOfferings()`の`current.availablePackages`に
+      `$rc_monthly`が1件返ることを確認する
+
+## 実機確認の結果(2026-08-29)
+
+iPhone 17 Pro シミュレータ(iOS 26)で確認した。`current` は `default`、
+`availablePackages` は1件で、`$rc_monthly` / `premium_monthly_test` / USD 2.99 が返る。
+
+確認のために `src/app/paywall-debug.tsx` を足した。`db-debug` と同じ作りの開発用一時画面で、
+`__DEV__` でしか描画せず、本番の導線からは辿れない(`learningkanjimobileapp://paywall-debug`)。
+**paywall UI を実装する回で削除すること。**
+`fetchOfferings()` はネイティブモジュールを叩くのでユニットテストではモックしかできず、
+実際にオファリングが降りてくるかは画面を出さないと分からないため。
+
+**気づいたこと**: RevenueCat が起動時に `ui_config` の取得に失敗して警告を2件出す
+(`Unable to merge remote config blob data for topic 'ui_config'`)。
+ダッシュボードに paywall を1つも作っていないためで、`getOfferings()` 自体は成功している。
+**RevenueCatUI のテンプレート paywall を使うなら、先にダッシュボード側の設定が要る。**
+自前UIで作るなら無視してよい。paywall UI の回で判断すること。
 
 ## テスト方針
 
