@@ -107,7 +107,10 @@ expo-router のファイルベース。`src/app/` にはルーティングと画
 
 ## アセット
 
-- 漢字イラスト: 背景透過PNG、テーマ非依存、`assets/kanji/<漢字>.png`
+- 漢字イラスト: 背景透過PNG、テーマ非依存、`assets/kanji/<illustrationKey>.png`。
+  `illustrationKey` は意味の英語スラッグ(`person` / `big` / `day` …)で、`KanjiEntry` が持つ。
+  漢字そのものをファイル名にしない: 日本語ファイル名を避けるため。訓読みのローマ字も使わない:
+  `日`(ひ) と `火`(ひ) が衝突し、`大`(おお → ō)が非ASCIIになるため
 - キャラアイコン: `assets/characters/{mia,grandma,sora}.png`
 - テーマ背景装飾: `assets/themes/<theme>/*.png`(合計3〜6枚まで)。
   ルートレイアウトで1度だけ敷き、各画面の背景は透明にする(要件5.3「全画面で使い回す」)
