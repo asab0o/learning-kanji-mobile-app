@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { getKanji, getSentence } from '@/db';
+import { getSentence, listKanji } from '@/db';
 import { ConversationView } from '@/features/reading';
 import { useTheme } from '@/theme';
 
@@ -14,9 +14,9 @@ export default function ConversationScreen() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [sentence] = useState(() => (id === undefined ? null : getSentence(id)));
-  const [newKanji] = useState(() =>
-    sentence === null || sentence.newKanjiId === null ? null : getKanji(sentence.newKanjiId)
-  );
+  // 新出漢字だけでなく、第2段階で読みが変わる字も引けるように全件渡す。
+  // 50字なので一覧で持って困る量ではない。
+  const [kanji] = useState(() => listKanji());
 
   const back = () => {
     if (router.canGoBack()) {
@@ -30,7 +30,7 @@ export default function ConversationScreen() {
     return <NotFound onBack={back} />;
   }
 
-  return <ConversationView sentence={sentence} newKanji={newKanji} onBack={back} />;
+  return <ConversationView sentence={sentence} kanji={kanji} onBack={back} />;
 }
 
 function NotFound({ onBack }: { onBack: () => void }) {

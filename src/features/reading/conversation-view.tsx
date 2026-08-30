@@ -4,10 +4,11 @@
  * 吹き出し・アバター・英訳の寸法は、退役した `theme-preview.tsx` から数値ごと引き継いでいる。
  * 実機で合わせた値なので作り直さない(docs/plans/conversation-screen.md)。
  *
- * ハイライトは新出漢字のみ。第2段階の演出カードと★バッジはここに無い
- * (バッジは「押すとカードが出る」合図なので、カードを作る回に同時に入れる)。
+ * 第2段階の回では、読みが変わる字が光り、演出行に★が付いて押せるようになる
+ * (要件定義書 4.6 ステップ1・2)。何を光らせ、どの行に★を出すかは `revealFor()` が決める。
  */
 
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,85 +16,133 @@ import type { KanjiEntry, Line, Sentence } from '@/content/types';
 import { CharacterAvatar } from '@/features/reading/character-avatar';
 import { focusCharactersFor } from '@/features/reading/focus';
 import { FuriganaText } from '@/features/reading/furigana';
+import { revealFor } from '@/features/reading/reveal';
+import { RevealCard } from '@/features/reading/reveal-card';
 import { toFuriganaSegments } from '@/features/reading/segments';
+import { useRevealSeen } from '@/features/reading/use-reveal-seen';
 import { RomajiToggle, useRomajiEnabled } from '@/features/settings';
 import { useTheme } from '@/theme';
 
+const NO_KANJI_IDS: string[] = [];
+
 interface ConversationViewProps {
   sentence: Sentence;
-  /** 新出漢字。`newKanjiId` が null の回、または見つからない場合は null */
-  newKanji: KanjiEntry | null;
+  /** 漢字マスタ。新出漢字と、第2段階で読みが変わる字をここから引く */
+  kanji: KanjiEntry[];
   onBack: () => void;
 }
 
-export function ConversationView({ sentence, newKanji, onBack }: ConversationViewProps) {
+export function ConversationView({ sentence, kanji, onBack }: ConversationViewProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const focusCharacters = focusCharactersFor(sentence, newKanji === null ? [] : [newKanji]);
+  const newKanji =
+    sentence.newKanjiId === null ? null : (kanji.find((k) => k.id === sentence.newKanjiId) ?? null);
+  const focusCharacters = focusCharactersFor(sentence, kanji);
+  const reveal = revealFor(sentence, kanji);
+  // フックは条件付きで呼べないので、演出が無い回でも安定した空配列を渡す
+  const { canShow, markSeen } = useRevealSeen(reveal?.kanjiIds ?? NO_KANJI_IDS);
+  const [cardOpen, setCardOpen] = useState(false);
+  // 絶対規則11: 一度見た回では★も出さず、押しても開かない(ハイライトだけ残る)
+  const revealable = reveal !== null && canShow;
+
+  const openCard = () => {
+    // 記録するのは開いた瞬間。閉じる経路は3つあるが開く経路は1つしかない
+    markSeen();
+    setCardOpen(true);
+  };
 
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 },
-      ]}
-    >
-      <View style={styles.header}>
-        {/* 文字だけだと当たり判定が細いので Pressable で包んで hitSlop を足す */}
-        <Pressable onPress={onBack} accessibilityRole="button" hitSlop={12}>
-          {({ pressed }) => (
-            <Text style={[styles.backLabel, { color: theme.accent, opacity: pressed ? 0.6 : 1 }]}>
-              Back
-            </Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 },
+        ]}
+      >
+        <View style={styles.header}>
+          {/* 文字だけだと当たり判定が細いので Pressable で包んで hitSlop を足す */}
+          <Pressable onPress={onBack} accessibilityRole="button" hitSlop={12}>
+            {({ pressed }) => (
+              <Text style={[styles.backLabel, { color: theme.accent, opacity: pressed ? 0.6 : 1 }]}>
+                Back
+              </Text>
+            )}
+          </Pressable>
+          <RomajiToggle />
+        </View>
+
+        <View style={styles.title}>
+          <Text
+            style={{
+              fontFamily: theme.type.mincho,
+              fontSize: 13,
+              letterSpacing: 0.78,
+              color: theme.text,
+              opacity: 0.78,
+            }}
+          >
+            {`Conversation ${sentence.order}`}
+          </Text>
+          {newKanji === null ? null : (
+            <View style={styles.newKanji}>
+              <Text
+                style={{ fontFamily: theme.type.minchoBold, fontSize: 13, color: theme.accent }}
+              >
+                {newKanji.character}
+              </Text>
+              <Text style={[styles.meta, { color: theme.textMuted }]}>{newKanji.meaning}</Text>
+            </View>
           )}
-        </Pressable>
-        <RomajiToggle />
-      </View>
+        </View>
 
-      <View style={styles.title}>
-        <Text
-          style={{
-            fontFamily: theme.type.mincho,
-            fontSize: 13,
-            letterSpacing: 0.78,
-            color: theme.text,
-            opacity: 0.78,
-          }}
-        >
-          {`Conversation ${sentence.order}`}
-        </Text>
-        {newKanji === null ? null : (
-          <View style={styles.newKanji}>
-            <Text style={{ fontFamily: theme.type.minchoBold, fontSize: 13, color: theme.accent }}>
-              {newKanji.character}
-            </Text>
-            <Text style={[styles.meta, { color: theme.textMuted }]}>{newKanji.meaning}</Text>
-          </View>
-        )}
-      </View>
+        <View style={styles.thread}>
+          {sentence.lines.map((line, index) => (
+            <Bubble
+              // 同じ話者が同じ文言を繰り返す回がある(#5 の空の「ごはん。」が2回)ので、
+              // 本文を key にすると重複する。行の順序そのものが同一性になる。
+              key={`${sentence.id}-${index}`}
+              line={line}
+              focusCharacters={focusCharacters}
+              badgeSegmentIndex={
+                revealable && reveal.lineIndex === index ? reveal.badgeSegmentIndex : undefined
+              }
+              onPress={revealable && reveal.lineIndex === index ? openCard : undefined}
+            />
+          ))}
+        </View>
+      </ScrollView>
 
-      <View style={styles.thread}>
-        {sentence.lines.map((line, index) => (
-          <Bubble
-            // 同じ話者が同じ文言を繰り返す回がある(#5 の空の「ごはん。」が2回)ので、
-            // 本文を key にすると重複する。行の順序そのものが同一性になる。
-            key={`${sentence.id}-${index}`}
-            line={line}
-            focusCharacters={focusCharacters}
-          />
-        ))}
-      </View>
-    </ScrollView>
+      {reveal !== null && cardOpen ? (
+        <RevealCard reveal={reveal} onClose={() => setCardOpen(false)} />
+      ) : null}
+    </View>
   );
 }
 
 const RIGHT_SPEAKER = 'mia';
 
-function Bubble({ line, focusCharacters }: { line: Line; focusCharacters: string[] }) {
+interface BubbleProps {
+  line: Line;
+  focusCharacters: string[];
+  /** ★を載せるセグメント。この行に★を出さないなら undefined */
+  badgeSegmentIndex?: number;
+  /** 押すと演出カードが出る行だけ渡す。undefined なら押せない */
+  onPress?: () => void;
+}
+
+function Bubble({ line, focusCharacters, badgeSegmentIndex, onPress }: BubbleProps) {
   const theme = useTheme();
   const romajiEnabled = useRomajiEnabled();
   // 学習者の分身であるミアを右に置く。自分の発話が右、という一般的なチャットの並び。
   const isRight = line.speaker === RIGHT_SPEAKER;
+  const text = (
+    <FuriganaText
+      segments={toFuriganaSegments(line.segments, focusCharacters, badgeSegmentIndex)}
+      // Pressable で包む行では行全体のグループ化を外す。そのままだと
+      // ボタン(Pressable)とラベル(FuriganaText)が二重になり、同じ本文が2回読まれる。
+      groupForAccessibility={onPress === undefined}
+    />
+  );
 
   return (
     // アバターは吹き出しの下端に揃える。英訳を同じ行に入れると
@@ -101,19 +150,33 @@ function Bubble({ line, focusCharacters }: { line: Line; focusCharacters: string
     <View style={isRight ? styles.turnRight : styles.turnLeft}>
       <View style={[styles.bubbleRow, isRight && styles.bubbleRowRight]}>
         <CharacterAvatar character={line.speaker} size={AVATAR_SIZE} />
-        <View
-          style={[
+        {/*
+          タップ対象は吹き出し全体。ふりがな付きセグメントは幅が10〜20pt しかなく、
+          単独では iOS の 44pt タップ領域を満たせない(要件は「ハイライトをタップ」だが、
+          ハイライトを押せばカードは出るので満たしている)。
+        */}
+        <Pressable
+          disabled={onPress === undefined}
+          onPress={onPress}
+          accessibilityRole={onPress === undefined ? undefined : 'button'}
+          accessibilityLabel={onPress === undefined ? undefined : line.japanese}
+          accessibilityLanguage="ja-JP"
+          accessibilityHint={
+            onPress === undefined ? undefined : 'Shows why this kanji is read differently'
+          }
+          style={({ pressed }) => [
             styles.bubble,
             theme.shadow.bubble,
             {
               backgroundColor: isRight ? theme.surfaceAlt : theme.surface,
               borderColor: theme.border,
               borderRadius: theme.radius.bubble,
+              opacity: pressed ? 0.8 : 1,
             },
           ]}
         >
-          <FuriganaText segments={toFuriganaSegments(line.segments, focusCharacters)} />
-        </View>
+          {text}
+        </Pressable>
       </View>
 
       <View

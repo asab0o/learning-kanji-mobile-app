@@ -9,6 +9,7 @@ import {
   checkReadingIntroduction,
   checkReencounterKanjiTaught,
   checkReencounterLineCleanliness,
+  checkReencounterRevealLine,
   checkReencounterProximity,
   checkSoraInteraction,
   checkSoraSpeechRule,
@@ -381,6 +382,143 @@ describe('checkReencounterLineCleanliness', () => {
       })
     );
     expect(issues).toEqual([]);
+  });
+});
+
+// --- checkReencounterRevealLine -------------------------------------------
+
+describe('checkReencounterRevealLine', () => {
+  const sunday = kanji('k-day', '日', 1);
+
+  /** #17 と同じ形。演出語が1行にあり、語の範囲が1字1セグメントで読み付き */
+  const revealLine = () =>
+    line('日曜日だよ。', 'grandma', [
+      { text: '日', reading: 'にち' },
+      { text: '曜', reading: 'よう' },
+      { text: '日', reading: 'び' },
+      { text: 'だよ。' },
+    ]);
+
+  const reveal = (overrides: Partial<Sentence> = {}) =>
+    content({
+      kanji: [sunday],
+      sentences: [
+        sentence({
+          id: 's-1',
+          order: 1,
+          lines: [line('きょうは、何の日ですか？'), revealLine()],
+          newKanjiId: null,
+          reencounters: [{ word: '日曜日', stage: 2, kanjiIds: ['k-day'] }],
+          ...overrides,
+        }),
+      ],
+    });
+
+  it('#17 と同じ形なら1件も返さない', () => {
+    expect(checkReencounterRevealLine(reveal())).toHaveLength(0);
+  });
+
+  it('演出語がどの行にも無ければ error', () => {
+    const issues = checkReencounterRevealLine(
+      reveal({ lines: [line('きょうは、何の日ですか？')] })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('0 行に現れます');
+  });
+
+  it('演出語が2行に現れたら error(演出行を一意に決められない)', () => {
+    const issues = checkReencounterRevealLine(
+      reveal({ lines: [revealLine(), line('日曜日ですね。')] })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('2 行に現れます');
+  });
+
+  it('演出語が1セグメントにまとまっていたら error', () => {
+    const issues = checkReencounterRevealLine(
+      reveal({
+        lines: [
+          line('日曜日だよ。', 'grandma', [
+            { text: '日曜日', reading: 'にちようび' },
+            { text: 'だよ。' },
+          ]),
+        ],
+      })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('1字1セグメント');
+  });
+
+  it('語の範囲に reading の無いセグメントがあれば error', () => {
+    const issues = checkReencounterRevealLine(
+      reveal({
+        lines: [
+          line('日曜日だよ。', 'grandma', [
+            { text: '日', reading: 'にち' },
+            { text: '曜' },
+            { text: '日', reading: 'び' },
+            { text: 'だよ。' },
+          ]),
+        ],
+      })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('reading がありません');
+  });
+
+  it('対象字が演出語に含まれていなければ error', () => {
+    const issues = checkReencounterRevealLine(
+      content({
+        kanji: [sunday, kanji('k-moon', '月', 2)],
+        sentences: [
+          sentence({
+            id: 's-1',
+            order: 1,
+            lines: [revealLine()],
+            newKanjiId: null,
+            reencounters: [{ word: '日曜日', stage: 2, kanjiIds: ['k-moon'] }],
+          }),
+        ],
+      })
+    );
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('語に含まれていません');
+  });
+
+  it('第1段階の再登場には反応しない', () => {
+    const issues = checkReencounterRevealLine(
+      reveal({
+        lines: [line('きょうは、何の日ですか？')],
+        reencounters: [{ word: '日曜日', stage: 1, kanjiIds: ['k-day'] }],
+      })
+    );
+
+    expect(issues).toHaveLength(0);
+  });
+
+  it('1文に第2段階が2件あれば error(画面は1件しか見ない)', () => {
+    const issues = checkReencounterRevealLine(
+      reveal({
+        reencounters: [
+          { word: '日曜日', stage: 2, kanjiIds: ['k-day'] },
+          { word: '日曜日', stage: 2, kanjiIds: ['k-day'] },
+        ],
+      })
+    );
+
+    expect(issues.some((i) => i.message.includes('2 件あります'))).toBe(true);
+  });
+
+  it('第2段階の回に新出漢字があれば error', () => {
+    const issues = checkReencounterRevealLine(reveal({ newKanjiId: 'k-day' }));
+
+    expect(errorsOf(issues)).toHaveLength(1);
+    expect(issues[0].message).toContain('新出漢字があります');
   });
 });
 

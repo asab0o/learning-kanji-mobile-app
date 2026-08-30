@@ -804,7 +804,9 @@ export function checkRomaji({ kanji, sentences }: ContentSet): Issue[] {
 
       const foreign = findForeignChar(line.romaji);
       if (foreign !== undefined) {
-        issues.push(err('romaji', `${at}: romaji に「${foreign}」が混ざっています("${line.romaji}")`));
+        issues.push(
+          err('romaji', `${at}: romaji に「${foreign}」が混ざっています("${line.romaji}")`)
+        );
         return;
       }
 
@@ -816,9 +818,7 @@ export function checkRomaji({ kanji, sentences }: ContentSet): Issue[] {
       // 語単位の出力(小文字)を行にそのまま貼った事故を拾う
       const firstLetter = [...line.romaji].find((c) => /\p{Letter}/u.test(c));
       if (firstLetter !== undefined && firstLetter !== firstLetter.toUpperCase()) {
-        issues.push(
-          warn('romaji', `${at}: romaji が小文字で始まっています("${line.romaji}")`)
-        );
+        issues.push(warn('romaji', `${at}: romaji が小文字で始まっています("${line.romaji}")`));
       }
     });
   }
@@ -834,6 +834,109 @@ export function checkRomaji({ kanji, sentences }: ContentSet): Issue[] {
   return issues;
 }
 
+/**
+ * 第2段階の演出行の形(要件定義書 4.6 ステップ2)。
+ *
+ * `Reencounter` は「どの行で演出するか」を持たない。演出行は `word` を含む行として
+ * 引き当てる(`checkReencounterLineCleanliness` と同じ引き方)ため、
+ * **語がちょうど1行に現れること**が前提になる。2行に出ると、どちらで演出するかが
+ * 決まらないまま画面が黙って素の会話文になる。
+ *
+ * さらにカードは「字ごとに読みがどう変わったか」を出すので、演出語の範囲は
+ * **1字1セグメントに割れていて、全てに `reading` が付いている**必要がある。
+ * `{ text: '日曜日', reading: 'にちようび' }` だと `日` の読みだけを取り出せない。
+ *
+ * ここを緩めると `revealFor()` が null を返し、演出が**エラーも出さずに消える**。
+ * 気づける場所がここしかないので error にしている。
+ */
+export function checkReencounterRevealLine({ kanji, sentences }: ContentSet): Issue[] {
+  const issues: Issue[] = [];
+  const charById = new Map(kanji.map((k) => [k.id, k.character]));
+
+  for (const s of byOrder(sentences)) {
+    const stage2 = s.reencounters.filter((r) => r.stage === 2);
+
+    // 画面側(`revealFor`)は 1 文につき第2段階を1件しか見ない。2件書くと
+    // 2件目は★もカードもハイライトも出ず、記録もされない。
+    // 2字同時は `kanjiIds` の配列で表す設計なので、1件に収まるはず。
+    if (stage2.length > 1) {
+      issues.push(
+        err(
+          'reencounter-reveal-line',
+          `${where(s)}: 第2段階が ${stage2.length} 件あります。1文につき1件にしてください(2字同時は kanjiIds の配列で表す)`
+        )
+      );
+    }
+
+    // 要件定義書 5.4「第2段階の回のみ新出漢字なしの特別回とする」。
+    // `focus.ts` はこの不変条件に依存していて、新出字があると
+    // **★は出てカードも開くのに読みが変わる字が光らない**という壊れ方をする。
+    if (stage2.length > 0 && s.newKanjiId !== null) {
+      issues.push(
+        err(
+          'reencounter-reveal-line',
+          `${where(s)}: 第2段階の回に新出漢字があります。演出の回は newKanjiId: null にしてください(そうしないと読みが変わる字にハイライトが付きません)`
+        )
+      );
+    }
+
+    for (const r of stage2) {
+      const hits = s.lines.filter((line) => line.japanese.includes(r.word));
+      if (hits.length !== 1) {
+        issues.push(
+          err(
+            'reencounter-reveal-line',
+            `${where(s)}: 第2段階 "${r.word}" が ${hits.length} 行に現れます。演出行を一意に決められないので、ちょうど1行にしてください(復唱する行は仮名で書く)`
+          )
+        );
+        continue;
+      }
+
+      const segments = hits[0].segments;
+      const chars = [...r.word];
+      // 語の範囲を、セグメントを連結しながら探す。1字1セグメントなら
+      // 語の先頭に一致する位置から chars.length 個が語の範囲になる。
+      const start = segments.findIndex((seg, i) =>
+        chars.every((c, k) => segments[i + k]?.text === c)
+      );
+
+      if (start === -1) {
+        issues.push(
+          err(
+            'reencounter-reveal-line',
+            `${where(s)}: 第2段階 "${r.word}" が1字1セグメントに割れていません。カードが字ごとの読みを取り出せません(例: { text: '日', reading: 'にち' } を字の数だけ並べる)`
+          )
+        );
+        continue;
+      }
+
+      for (const seg of segments.slice(start, start + chars.length)) {
+        if (seg.reading === undefined) {
+          issues.push(
+            err(
+              'reencounter-reveal-line',
+              `${where(s)}: 第2段階 "${r.word}" のセグメント "${seg.text}" に reading がありません。演出はここから変化後の読みを取ります`
+            )
+          );
+        }
+      }
+
+      for (const id of r.kanjiIds) {
+        const char = charById.get(id);
+        if (char !== undefined && !r.word.includes(char)) {
+          issues.push(
+            err(
+              'reencounter-reveal-line',
+              `${where(s)}: 第2段階 "${r.word}" の対象字 "${char}" が語に含まれていません`
+            )
+          );
+        }
+      }
+    }
+  }
+  return issues;
+}
+
 const RULES = [
   // error — 壊れると差別化機能が成立しない
   checkUniqueIds,
@@ -841,6 +944,7 @@ const RULES = [
   checkOrderSequence,
   checkNewKanjiPerSentence,
   checkReencounterKanjiTaught,
+  checkReencounterRevealLine,
   checkReadingIntroduction,
   checkFreeChapterBoundary,
   checkChapterComposition,

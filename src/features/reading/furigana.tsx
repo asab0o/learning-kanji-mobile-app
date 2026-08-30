@@ -17,10 +17,23 @@ import { useTheme } from '@/theme/theme-context';
 export type FuriganaSegment = LineSegment & {
   /** いまハイライトする字を含むセグメント。テーマの accent で描く。 */
   focus?: boolean;
+  /**
+   * 「読みが変わった」演出の合図(要件定義書 4.6 ステップ1)。
+   * **押すと種明かしカードが出る場所**を指すので、押せない行には付けない。
+   */
+  badge?: boolean;
 };
 
 type FuriganaTextProps = {
   segments: FuriganaSegment[];
+  /**
+   * 行全体を1つのアクセシビリティ要素にまとめるか。既定は true。
+   *
+   * この行を `Pressable` で包むときだけ false にする。true のままだと
+   * ボタン(Pressable)とラベル(この View)が二重になり、VoiceOver が
+   * 同じ本文を2回読む。
+   */
+  groupForAccessibility?: boolean;
 };
 
 /**
@@ -33,12 +46,13 @@ type FuriganaTextProps = {
  *
  * 行の高さの内訳は `furigana-metrics.ts` が持つ。
  */
-export function FuriganaText({ segments }: FuriganaTextProps) {
+export function FuriganaText({ segments, groupForAccessibility = true }: FuriganaTextProps) {
   const theme = useTheme();
   // 端末の文字サイズ設定。useWindowDimensions は設定変更で再レンダリングされる
   // (PixelRatio.getFontScale() は初回の値を返したままになる)。
   const { fontScale } = useWindowDimensions();
   const { readingSize, readingHeight, baseLineHeight } = furiganaMetrics(theme.type, fontScale);
+  const badgeSize = readingSize - 1;
 
   return (
     <View
@@ -46,8 +60,10 @@ export function FuriganaText({ segments }: FuriganaTextProps) {
       // セグメントごとに Text が分かれているため、そのままだと VoiceOver が
       // 「きょう」「今日」「は」…と読みと本文を交互に読んでしまう。
       // 行全体を1要素にまとめ、本文だけを繋いだラベルを読ませる。
-      accessible
-      accessibilityLabel={segments.map((segment) => segment.text).join('')}
+      accessible={groupForAccessibility}
+      accessibilityLabel={
+        groupForAccessibility ? segments.map((segment) => segment.text).join('') : undefined
+      }
       accessibilityLanguage="ja-JP"
     >
       {segments.map((segment, index) => (
@@ -87,6 +103,29 @@ export function FuriganaText({ segments }: FuriganaTextProps) {
               {segment.text}
             </Text>
           </View>
+          {segment.badge === true ? (
+            // 絶対配置にするのは行の高さを変えないため。ふりがなの height は
+            // furiganaMetrics が決めており、★を通常のテキストとして足すと
+            // 段が増えて全文の組みが崩れる。
+            // 読み上げからは外す(意味は Pressable 側の accessibilityHint が持つ)。
+            <Text
+              style={[
+                styles.badge,
+                {
+                  color: theme.accent,
+                  fontSize: badgeSize,
+                  // 端末の文字サイズ倍率を掛ける。fontSize は RN が自動で拡大するのに
+                  // lineHeight と位置は拡大しないので、掛けないと文字サイズを上げた
+                  // 端末で★がふりがなに重なる(furigana-metrics.ts と同じ理由)。
+                  lineHeight: badgeSize * fontScale,
+                  top: -(badgeSize + 2) * fontScale,
+                },
+              ]}
+              accessibilityElementsHidden
+            >
+              ★
+            </Text>
+          ) : null}
         </View>
       ))}
     </View>
@@ -101,5 +140,18 @@ const styles = StyleSheet.create({
   },
   segment: {
     alignItems: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    // 読みの**上**に出す。右に逃がすと隣のセグメントの読みに重なる
+    // (実機で「にち★うび」となり `曜` の「よ」が隠れた)。
+    // top は吹き出しの上側の内側余白に載る想定で、倍率込みの値を描画側で入れる。
+    //
+    // **既知の制約**: 折り返した2行目のセグメントに★が来ると直上の行に重なる
+    // (styles.row に rowGap が無いため)。演出語を折り返しの2行目に落とさないことを
+    // 執筆側の制約にしている(docs/content-spec.md「演出行の書き方」)。
+    left: 0,
+    right: 0,
+    textAlign: 'center',
   },
 });
