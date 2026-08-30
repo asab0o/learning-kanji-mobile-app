@@ -52,3 +52,6 @@ example
 
 # test coverage
 coverage/
+
+# 漢字イラストの生成物置き場(rembg 前の入力)。成果物は assets/kanji/ に入れる
+assets/temp/

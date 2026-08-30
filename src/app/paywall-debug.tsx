@@ -3,7 +3,7 @@
  *
  * **paywall UI を実装する回で削除すること**(docs/plans/paywall-sdk-init.md)。
  * 本番の導線からは辿れず、`learningkanjimobileapp://paywall-debug` で直接開く。
- * 同じ役割の `db-debug` と同じ作りにしてある。
+ * DB 基盤の受け入れ確認に使っていた `db-debug`(会話文画面の実装で退役)と同じ作り。
  *
  * ここで見たいのは1つだけ:「Test Store のオファリングが端末に降りてくること」。
  * `fetchOfferings()` はネイティブモジュールを叩くのでユニットテストでは
@@ -32,7 +32,7 @@ type State =
  * 本番ビルドでは何も出さない。
  *
  * フックを持つ本体を内側に分けているのは、`__DEV__` の判定をフックより先に置くため
- * (`db-debug` と同じ理由)。
+ * (本番でも DB クエリを含む初期化が走ってしまうため)。
  */
 export default function PaywallDebugScreen() {
   if (!__DEV__) {

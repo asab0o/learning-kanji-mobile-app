@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useDatabase } from '@/db';
 import { configurePurchases } from '@/features/paywall';
+import { SettingsProvider } from '@/features/settings';
 import { ThemeBackdrop, ThemeProvider, useTheme } from '@/theme';
 
 /**
@@ -75,12 +76,18 @@ function ThemedShell() {
         <DatabaseError message={database.error?.message ?? 'Unknown error'} />
       ) : database.status === 'ready' ? (
         <NavigationThemeProvider value={TRANSPARENT_NAVIGATION_THEME}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
+          {/*
+            SettingsProvider は ready の内側に置く。getUserSettings() は行が無ければ
+            INSERT するので、マイグレーション前に呼ぶと落ちる。
+          */}
+          <SettingsProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+          </SettingsProvider>
         </NavigationThemeProvider>
       ) : null}
     </View>
