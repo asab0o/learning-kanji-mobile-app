@@ -16,21 +16,29 @@ import type { FuriganaSegment } from '@/features/reading/furigana';
  * 対象が空なら1つも付けない(ハイライト無しで素の文を見せたい場面がある)。
  * 同じ字が複数のセグメントに現れる場合は、そのすべてに付く。
  *
+ * `badgeIndex` を渡すと、**その位置のセグメントにだけ** `badge` を付ける。
+ * ★は「押すとカードが出る場所」を1つ指すものなので、`focus` と違って複数に付けない
+ * (どこを押せばよいか分からなくなる)。範囲外の添字は無視する。
+ *
  * 元の配列は書き換えない。呼び出し側が持っているコンテンツを汚さないため。
  */
 export function toFuriganaSegments(
   segments: LineSegment[],
-  focusCharacters: readonly string[]
+  focusCharacters: readonly string[],
+  badgeIndex?: number
 ): FuriganaSegment[] {
-  if (focusCharacters.length === 0) {
-    return segments.map((segment) => ({ ...segment }));
-  }
+  return segments.map((segment, index) => {
+    const next: FuriganaSegment = { ...segment };
 
-  return segments.map((segment) => {
-    const focused = focusCharacters.some((character) => segment.text.includes(character));
-
-    // focus: false を置かない。既定値と同じ意味なので、
+    // focus: false / badge: false を置かない。既定値と同じ意味なので、
     // 付けないほうが差分を読むときに「光る所」だけが目に入る。
-    return focused ? { ...segment, focus: true } : { ...segment };
+    if (focusCharacters.some((character) => segment.text.includes(character))) {
+      next.focus = true;
+    }
+    if (index === badgeIndex) {
+      next.badge = true;
+    }
+
+    return next;
   });
 }

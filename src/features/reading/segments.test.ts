@@ -83,4 +83,44 @@ describe('toFuriganaSegments', () => {
   it('空の配列を渡すと空の配列が返る', () => {
     expect(toFuriganaSegments([], ['歩'])).toEqual([]);
   });
+
+  // --- badge(第2段階の演出の合図) --------------------------------------
+
+  it('badgeIndex の位置のセグメントにだけ badge が付く', () => {
+    const result = toFuriganaSegments(walkedALot, ['歩'], 1);
+
+    expect(result.filter((segment) => segment.badge === true)).toEqual([
+      { text: '歩', reading: 'ある', focus: true, badge: true },
+    ]);
+  });
+
+  it('focus の対象が空でも badge だけを付けられる', () => {
+    // 演出行のハイライトと★は独立して決まるので、この組み合わせが起きうる
+    const result = toFuriganaSegments(walkedALot, [], 0);
+
+    expect(result[0]).toEqual({ text: 'たくさん', badge: true });
+    expect(result.filter((segment) => segment.focus === true)).toHaveLength(0);
+  });
+
+  it('badgeIndex が undefined なら1つも付かない', () => {
+    const result = toFuriganaSegments(walkedALot, ['歩']);
+
+    expect(result.some((segment) => segment.badge === true)).toBe(false);
+  });
+
+  it('badgeIndex が範囲外・負でも1つも付かない', () => {
+    for (const index of [-1, 3, 99]) {
+      const result = toFuriganaSegments(walkedALot, ['歩'], index);
+
+      expect(result.some((segment) => segment.badge === true)).toBe(false);
+    }
+  });
+
+  it('badge を付けても元の配列を書き換えない', () => {
+    const original = structuredClone(walkedALot);
+
+    toFuriganaSegments(walkedALot, ['歩'], 1);
+
+    expect(walkedALot).toEqual(original);
+  });
 });

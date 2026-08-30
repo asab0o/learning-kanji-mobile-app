@@ -6,6 +6,7 @@ import { focusCharactersFor } from '@/features/reading/focus';
 
 const PERSON_ID = '01J0000000000000000000KAN1';
 const BIG_ID = '01J0000000000000000000KAN2';
+const DAY_ID = '01J0000000000000000000KAN3';
 
 function kanjiFixture(overrides: Partial<KanjiEntry> = {}): KanjiEntry {
   return {
@@ -50,7 +51,20 @@ function sentenceFixture(overrides: Partial<Sentence> = {}): Sentence {
   };
 }
 
-const kanji = [kanjiFixture(), kanjiFixture({ id: BIG_ID, character: '大', order: 2 })];
+const kanji = [
+  kanjiFixture(),
+  kanjiFixture({ id: BIG_ID, character: '大', order: 2 }),
+  kanjiFixture({
+    id: DAY_ID,
+    character: '日',
+    order: 3,
+    meaning: 'day, sun',
+    readings: [
+      { kana: 'ひ', romaji: 'hi', type: 'kun' },
+      { kana: 'にち', romaji: 'nichi', type: 'on' },
+    ],
+  }),
+];
 
 describe('focusCharactersFor', () => {
   it('新出漢字の1字を返す', () => {
@@ -61,13 +75,47 @@ describe('focusCharactersFor', () => {
     expect(focusCharactersFor(sentenceFixture({ newKanjiId: BIG_ID }), kanji)).toEqual(['大']);
   });
 
-  it('第2段階専用の回(newKanjiId が null)では空を返す', () => {
+  it('第2段階専用の回では、読みが変わる字を返す', () => {
+    // #17 と同じ形。演出行の語が1字1セグメントに割れているので revealFor が成立する
     const special = sentenceFixture({
       newKanjiId: null,
-      reencounters: [{ word: '日曜日', stage: 2, kanjiIds: [PERSON_ID] }],
+      reencounters: [{ word: '日曜日', stage: 2, kanjiIds: [DAY_ID] }],
+      lines: [
+        {
+          speaker: 'grandma',
+          japanese: '日曜日だよ。',
+          segments: [
+            { text: '日', reading: 'にち' },
+            { text: '曜', reading: 'よう' },
+            { text: '日', reading: 'び' },
+            { text: 'だよ。' },
+          ],
+          romaji: 'Nichiyōbi da yo.',
+          english: "It's Sunday.",
+        },
+      ],
     });
 
-    expect(focusCharactersFor(special, kanji)).toEqual([]);
+    expect(focusCharactersFor(special, kanji)).toEqual(['日']);
+  });
+
+  it('第2段階の回でも、演出が成立しなければ空を返す', () => {
+    // 語が1セグメントにまとまっていて字ごとの読みを取り出せない形
+    const broken = sentenceFixture({
+      newKanjiId: null,
+      reencounters: [{ word: '日曜日', stage: 2, kanjiIds: [DAY_ID] }],
+      lines: [
+        {
+          speaker: 'grandma',
+          japanese: '日曜日だよ。',
+          segments: [{ text: '日曜日', reading: 'にちようび' }, { text: 'だよ。' }],
+          romaji: 'Nichiyōbi da yo.',
+          english: "It's Sunday.",
+        },
+      ],
+    });
+
+    expect(focusCharactersFor(broken, kanji)).toEqual([]);
   });
 
   it('newKanjiId に対応する漢字が無くても投げずに空を返す', () => {
