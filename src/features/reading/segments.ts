@@ -30,7 +30,7 @@ export function toFuriganaSegments(
     const focused = focusCharacters.some((character) => segment.text.includes(character));
 
     // focus: false を置かない。既定値と同じ意味なので、
-    // theme-preview に手書きされている配列と構造を揃えるため。
+    // 付けないほうが差分を読むときに「光る所」だけが目に入る。
     return focused ? { ...segment, focus: true } : { ...segment };
   });
 }

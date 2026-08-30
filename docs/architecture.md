@@ -30,6 +30,7 @@ src/content/      静的コンテンツ(会話文・漢字マスタ)
 | `features/tree/` | 漢字の樹の SVG 描画、レイアウトパターン選択、一覧グリッド | 4.5 |
 | `features/paywall/` | RevenueCat、購入の復元、章のロック判定 | 7章 |
 | `features/onboarding/` | 初回3画面 | 5.1-10 |
+| `features/settings/` | ユーザー設定(ローマ字ON/OFF)の配布。真実は `user_settings`(SQLite) | 5.2 |
 
 各 feature の中は自由だが、以下だけ守る。
 
@@ -99,6 +100,19 @@ const theme = useTheme();
 
 expo-router のファイルベース。`src/app/` にはルーティングと画面の組み立てだけを置き、
 ロジックは feature に置く。画面ファイルが 150 行を超えたら feature 側に切り出す合図。
+
+**feature は `expo-router` を import しない。** 画面遷移は app 層が持ち、feature には
+`onSelect` / `onBack` のようなコールバックで渡す。feature をルーティングから切り離しておくと、
+画面構成が変わっても feature を書き換えずに済む。
+
+現在のルート:
+
+```
+src/app/_layout.tsx             Stack。テーマの地・背景装飾・DB・設定 Provider を敷く
+src/app/index.tsx               会話文の一覧(暫定。SRS 実装時に「今日の学習」へ置き換わる)
+src/app/conversation/[id].tsx   会話文1本
+src/app/paywall-debug.tsx       開発専用。paywall UI の実装時に削除する
+```
 
 ## オフライン前提
 

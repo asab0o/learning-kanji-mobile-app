@@ -3,7 +3,7 @@ import { toFuriganaSegments } from '@/features/reading/segments';
 
 // FuriganaText(React)は import しない。ここで見たいのは focus の付け方だけ。
 
-/** 会話文集 #32 の1行目。theme-preview.tsx に手書きされているものと同じ分け方 */
+/** 会話文集 #32 の1行目。docs/content-spec.md「行データの形」の例そのもの */
 const walkedALot: LineSegment[] = [
   { text: 'たくさん' },
   { text: '歩', reading: 'ある' },
@@ -20,9 +20,9 @@ describe('toFuriganaSegments', () => {
     ]);
   });
 
-  it('theme-preview に手書きされている配列と一致する', () => {
-    // 既存の画面が求めている形と、導出した形が同じであることを見る。
-    // ここがずれると、実データを入れたときに手書きのモックと描画が変わる。
+  it('content-spec の例と同じ形を返す', () => {
+    // 仕様書に載っている形と、導出した形が同じであることを見る。
+    // ここがずれると、仕様を読んで書いたデータが画面で別物になる。
     expect(toFuriganaSegments(walkedALot, ['歩'])).toEqual([
       { text: 'たくさん' },
       { text: '歩', reading: 'ある', focus: true },
