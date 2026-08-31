@@ -620,7 +620,8 @@ export function checkReencounterProximity(content: ContentSet): Issue[] {
  * 第2段階の演出をする行に未習漢字が混ざっていないか(決定事項 4章)。
  *
  * 「読みが変わった」ことに集中させたい行なので、他の未習漢字は注意を散らす。
- * 実データでも #30 が 読・書 で該当するため警告に留める。
+ * 第4章は17文に第2段階4回を詰め込むため演出行から未習を完全には外せない。
+ * error にせず警告に留める。
  */
 export function checkReencounterLineCleanliness(content: ContentSet): Issue[] {
   const issues: Issue[] = [];
