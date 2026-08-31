@@ -99,6 +99,19 @@ pnpm run db:generate  # drizzle-kit でマイグレーション生成
 `pnpm exec expo start` は起動しっぱなしになるので、動作確認は iOS シミュレータの
 MCP ツール(`attach` → `build` → `launch`)を使う。
 
+**`attach` / `launch` が `disclaimer exited with code 143` で落ちたら、
+古い `disclaimer` が残っている。** 143 は SIGTERM で、前回のセッションが残した
+`disclaimer -- xcrun simctl spawn ... log stream`(ライブパネルが使う画面の向きの監視)が
+`disclaimer` を掴んだまま終了しないと、新しく立てようとするたびにタイムアウトで殺される。
+
+```
+ps aux | grep "Helpers/disclaimer" | grep -v grep
+```
+
+`log stream` を含む行があれば kill する。**MCP ツールの故障ではないので、
+`simctl` 直叩きに逃げないこと**(逃げるとライブパネルに何も映らず、開発者が画面を見られない)。
+2026-08-30 に2日前の残骸で1時間ぶん遠回りした。
+
 ## ディレクトリ
 
 ```
