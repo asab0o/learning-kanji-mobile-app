@@ -112,6 +112,7 @@ src/app/_layout.tsx             Stack。テーマの地・背景装飾・DB・�
 src/app/index.tsx               今日の学習(1日3字)。入口
 src/app/conversation/[id].tsx   会話文1本
 src/app/kanji/[id].tsx          漢字フォーカス。`?lesson=<文ID>` 付きのときだけ完了 CTA が出る
+src/app/review.tsx              復習セッション(意味の4択)
 src/app/conversations.tsx       開発専用。会話文の全一覧(上限を跨いで任意の回を開く)
 src/app/paywall-debug.tsx       開発専用。paywall UI の実装時に削除する
 ```

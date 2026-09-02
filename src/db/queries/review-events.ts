@@ -6,6 +6,9 @@
  * 現在のステージはイベントを畳み込んで求めるものであって、上書きするものではない。
  *
  * 推測クイズの結果をここに書かない(絶対規則10)。それは `@/db/queries/quiz-attempts` 側。
+ *
+ * **会話文の ID は持たない。** 復習の単位は漢字1字で、出題は意味の4択のみ(ADR-0007)。
+ * 「どの文で出会った字か」が要るときは `lesson_events` を `kanji_id` で引く。
  */
 
 import { asc, eq } from 'drizzle-orm';
@@ -19,14 +22,12 @@ export type ReviewResult = 'correct' | 'incorrect';
 export interface ReviewEvent {
   id: string;
   kanjiId: string;
-  sentenceId: string;
   result: ReviewResult;
   reviewedAt: number;
 }
 
 export interface NewReviewEvent {
   kanjiId: string;
-  sentenceId: string;
   result: ReviewResult;
   /** 省略時は現在時刻 */
   reviewedAt?: number;
@@ -38,7 +39,6 @@ export function insertReviewEvent(event: NewReviewEvent): ReviewEvent {
   const row = {
     id: newId(),
     kanjiId: event.kanjiId,
-    sentenceId: event.sentenceId,
     result: event.result,
     reviewedAt: event.reviewedAt ?? now,
     createdAt: now,
@@ -72,7 +72,6 @@ function toReviewEvent(row: typeof reviewEvents.$inferSelect): ReviewEvent {
   return {
     id: row.id,
     kanjiId: row.kanjiId,
-    sentenceId: row.sentenceId,
     result: row.result,
     reviewedAt: row.reviewedAt,
   };

@@ -37,7 +37,6 @@
 {
   id: string;          // ULID
   kanjiId: string;
-  sentenceId: string;
   result: 'correct' | 'incorrect';
   reviewedAt: number;  // UNIX ms
   createdAt: number;
@@ -45,7 +44,14 @@
 }
 ```
 
-現在のステージは `review_events` を時系列に畳み込んで求める。
+**会話文の ID は持たない。** 復習の単位は漢字1字で、出題は意味の4択のみ(ADR-0007)。
+`sentence_id` は「文＋漢字のセットで復習する」という要件の素朴な読みから NOT NULL で
+作られていたが、会話文を再表示しない以上、入れるべき値が無い。導入回の ID を入れる案も
+検討したが、それは `lesson_events` から常に引ける導出値なので `0003` で列ごと削除した。
+**「どの文で出会った字か」は `lesson_events`(`kanji_id` と `sentence_id` のペア)が持つ。**
+
+現在のステージは `review_events` を時系列に畳み込んで求める(実装は
+`src/features/srs/scheduler.ts` の `foldKanjiStates()`)。
 
 ```
 stage = fold(events.filter(e => e.kanjiId === id).sortBy(reviewedAt))

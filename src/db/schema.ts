@@ -184,13 +184,16 @@ export const lessonEvents = sqliteTable(
  *
  * 現在のステージはこのログを時系列に畳み込んで求める。1行上書き型にしないのは、
  * 将来2台目の端末が入ってもイベントを時系列にマージするだけで正しい状態になるため。
+ *
+ * **`sentence_id` は 0003 で削除した。** 復習の単位は漢字1字で、出題は意味の4択のみ。
+ * 会話文を再表示しないので、復習イベントに入れるべき文が存在しない(ADR-0007)。
+ * 「どの文で出会った字か」は `lesson_events` が持っている。
  */
 export const reviewEvents = sqliteTable(
   'review_events',
   {
     id: text('id').primaryKey(),
     kanjiId: text('kanji_id').notNull(),
-    sentenceId: text('sentence_id').notNull(),
     result: text('result', { enum: ['correct', 'incorrect'] }).notNull(),
     reviewedAt: integer('reviewed_at').notNull(),
     ...timestamps,

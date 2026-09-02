@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 
-import { listKanji, listLessonEvents, listSentences } from '@/db';
-import { planTodaysLessons, TodayView } from '@/features/srs';
+import { listKanji, listLessonEvents, listReviewEvents, listSentences } from '@/db';
+import { planTodaysLessons, planTodaysReviews, TodayView } from '@/features/srs';
 
 /**
  * 入口画面「今日の学習」(要件定義書 4.1 / 5.1-8)。
@@ -34,11 +34,22 @@ export default function TodayScreen() {
     limit: ignoreLimit ? Number.POSITIVE_INFINITY : undefined,
   });
 
+  // 復習には1日の上限を掛けない。ADR-0003 が抑えたいのは新規の投入速度で、
+  // 復習の件数はその結果として決まる(docs/plans/srs-reviews.md)
+  const reviews = planTodaysReviews({
+    kanji: snapshot.kanji,
+    lessons: snapshot.completions,
+    reviews: snapshot.reviews,
+    now: snapshot.now,
+  });
+
   return (
     <TodayView
       lessons={lessons}
       kanji={snapshot.kanji}
       onSelect={(id) => router.push({ pathname: '/conversation/[id]', params: { id } })}
+      reviewDueCount={reviews.dueCount}
+      onOpenReviews={() => router.push('/review')}
       ignoreLimit={__DEV__ ? ignoreLimit : undefined}
       onChangeIgnoreLimit={__DEV__ ? setIgnoreLimit : undefined}
     />
@@ -50,6 +61,7 @@ function read() {
     sentences: listSentences(),
     kanji: listKanji(),
     completions: listLessonEvents(),
+    reviews: listReviewEvents(),
     // 「今日」も画面に入るたびに取り直す。描画中に `Date.now()` を呼ぶと
     // 再描画のたびに結果が変わる不純な関数になる(react-hooks/purity)。
     // 開きっぱなしで日をまたいでも、次に画面へ戻った時点で今日の枠に切り替わる。
