@@ -17,6 +17,14 @@ export {
   listWordsByKanji,
 } from '@/db/queries/content';
 
+// 学習(導入)のイベントログ。INSERT と SELECT だけを公開する
+export {
+  hasCompletedSentence,
+  insertLessonEvent,
+  listLessonEvents,
+} from '@/db/queries/lesson-events';
+export type { LessonEvent, NewLessonEvent } from '@/db/queries/lesson-events';
+
 // SRS のイベントログ。INSERT と SELECT だけを公開する(絶対規則5)
 export { insertReviewEvent, listReviewEvents } from '@/db/queries/review-events';
 export type { NewReviewEvent, ReviewEvent, ReviewResult } from '@/db/queries/review-events';

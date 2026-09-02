@@ -10,7 +10,7 @@
 | 区分 | テーブル | 性質 |
 |---|---|---|
 | **コンテンツ** | `kanji`, `words`, `sentences`, `sentence_lines`, `content_meta` | アプリに同梱。読み取り専用。将来も同期不要。アプリ更新で丸ごと入れ替わる |
-| **ユーザー状態** | `review_events`, `quiz_attempts`, `user_settings`, `reveal_shown` | 端末で生成される。**将来のクラウド同期対象** |
+| **ユーザー状態** | `lesson_events`, `review_events`, `quiz_attempts`, `user_settings`, `reveal_shown` | 端末で生成される。**将来のクラウド同期対象** |
 
 この2つを同じテーブルに混ぜると、同期を足すときに全部やり直しになる。
 
@@ -57,6 +57,36 @@ stage = fold(events.filter(e => e.kanjiId === id).sortBy(reviewedAt))
 理由: 将来2台目の端末が入っても、イベントを時系列にマージするだけで正しい状態になる。
 上書き型だと「どちらの端末の状態が正しいか」を解く競合解決ロジックが必要になり、
 ログインなしのMVPから同期版へ移る一番の障害になる。
+
+## 学習(導入)と復習を別の表に分ける
+
+「その回を学び終えた」は `lesson_events` に、「復習した結果」は `review_events` に入れる。
+
+```ts
+// lesson_events — INSERT のみ
+{
+  id: string;            // ULID
+  sentenceId: string;
+  kanjiId: string | null; // 第2段階専用の回は新出字が無い
+  completedAt: number;    // UNIX ms
+  createdAt: number;
+  updatedAt: number;
+}
+```
+
+**`review_events` に `result: 'correct'` を入れて導入を代用しない。** あちらは結果が
+2値の復習ログで「導入した」を表せず、混ぜるとステージ計算が最初から1段ずれる。
+`lesson_events` は正解/不正解の概念を持たない。
+
+`sentence_id` に UNIQUE を張っていないのは、これがフラグ(`reveal_shown`)ではなく履歴だから。
+同じ回を読み返したときに制約違反で落ちるより、追記が積まれるほうがログの意図に合う。
+二重計上は2段で防ぐ。
+
+1. 書き込み側 — 既に完了記録がある文には INSERT しない(`insertLessonEvent`)
+2. 読み出し側 — 畳み込みで**文ごとに最も古い1件**だけを採る(`planTodaysLessons`)
+
+「今日何字学んだか」もこのログから導出する。カウンタを1行持って上書きしない。
+理由は `review_events` と同じで、2台目の端末が入ってもマージで正しい状態になるため。
 
 ## 推測クイズは SRS と混ぜない
 

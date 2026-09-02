@@ -12,9 +12,11 @@ Drizzle ORM + expo-sqlite。設計の背景は `docs/data-model.md`。
    | 区分 | テーブル |
    |---|---|
    | コンテンツ(同梱・同期不要) | `kanji`, `words`, `sentences`, `sentence_lines`, `content_meta` |
-   | ユーザー状態(将来の同期対象) | `review_events`, `quiz_attempts`, `user_settings`, `reveal_shown` |
+   | ユーザー状態(将来の同期対象) | `lesson_events`, `review_events`, `quiz_attempts`, `user_settings`, `reveal_shown` |
 
-4. **`review_events` は INSERT のみ。** UPDATE / DELETE を書かない。
+4. **`lesson_events` / `review_events` は INSERT のみ。** UPDATE / DELETE を書かない。
+   前者は「いつその回を学んだか」、後者は「復習の結果」。**混ぜない** —
+   導入を `review_events` の `correct` で代用するとステージが最初から1段ずれる。
    現在のステージはイベントを畳み込んで求める。
    `kanji_progress` を置く場合、それはいつ捨てても再構築できるキャッシュ
 5. **推測クイズの結果を `review_events` に書かない。** `quiz_attempts` に入れる。

@@ -109,10 +109,15 @@ expo-router のファイルベース。`src/app/` にはルーティングと画
 
 ```
 src/app/_layout.tsx             Stack。テーマの地・背景装飾・DB・設定 Provider を敷く
-src/app/index.tsx               会話文の一覧(暫定。SRS 実装時に「今日の学習」へ置き換わる)
+src/app/index.tsx               今日の学習(1日3字)。入口
 src/app/conversation/[id].tsx   会話文1本
+src/app/kanji/[id].tsx          漢字フォーカス。`?lesson=<文ID>` 付きのときだけ完了 CTA が出る
+src/app/conversations.tsx       開発専用。会話文の全一覧(上限を跨いで任意の回を開く)
 src/app/paywall-debug.tsx       開発専用。paywall UI の実装時に削除する
 ```
+
+**開発専用の画面は本番の導線から辿れない。** `learningkanjimobileapp://conversations` の
+ように直接開く。`__DEV__` 以外では中身を描かない。
 
 **固定ヘッダーは無い。** `Stack` は `headerShown: false`(`_layout.tsx`)で、ネイティブヘッダーを
 出すと背景装飾の上に不透明な帯が乗るため。各画面は `Back` や `Romaji` トグルを

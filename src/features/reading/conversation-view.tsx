@@ -30,9 +30,14 @@ interface ConversationViewProps {
   /** 漢字マスタ。新出漢字と、第2段階で読みが変わる字をここから引く */
   kanji: KanjiEntry[];
   onBack: () => void;
+  /**
+   * 読み終えたあとの続き。新出字のある回は漢字フォーカス画面へ、
+   * 第2段階専用の回はその場で完了になる。省略すると CTA が出ない(表示専用)。
+   */
+  onContinue?: () => void;
 }
 
-export function ConversationView({ sentence, kanji, onBack }: ConversationViewProps) {
+export function ConversationView({ sentence, kanji, onBack, onContinue }: ConversationViewProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const newKanji =
@@ -110,6 +115,33 @@ export function ConversationView({ sentence, kanji, onBack }: ConversationViewPr
             />
           ))}
         </View>
+
+        {onContinue === undefined ? null : (
+          // 固定フッターにせずスレッドの末尾に置く。会話を読み終えた人だけが
+          // 到達する位置にあることが「読んでから学ぶ」順序を担保する
+          // (画面上部のヘッダーを固定にする話は docs/architecture.md の検討中項目)。
+          <Pressable
+            onPress={onContinue}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              styles.cta,
+              {
+                backgroundColor: theme.accent,
+                borderRadius: theme.radius.pill,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            {/*
+              ラベルは `newKanjiId`(生のID)で分ける。引けた実体 `newKanji` で分けると、
+              ID はあるのにマスタに無い字のときラベルが `Got it` になるのに、
+              app 層は同じ条件をIDで見てフォーカス画面へ飛ばすので食い違う。
+            */}
+            <Text style={[styles.ctaLabel, { color: theme.onAccent }]}>
+              {sentence.newKanjiId === null ? 'Got it' : 'Study this kanji'}
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       {reveal !== null && cardOpen ? (
@@ -241,6 +273,15 @@ const styles = StyleSheet.create({
   },
   thread: {
     gap: 16,
+  },
+  cta: {
+    alignSelf: 'center',
+    paddingHorizontal: 28,
+    paddingVertical: 13,
+    marginTop: 8,
+  },
+  ctaLabel: {
+    fontSize: 15,
   },
   turnLeft: {
     alignItems: 'flex-start',

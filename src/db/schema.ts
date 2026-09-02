@@ -153,6 +153,33 @@ export const contentMeta = sqliteTable('content_meta', {
 // ─────────────────────────────────────────────────────────
 
 /**
+ * 「その回を学び終えた」ことの記録。**INSERT のみ**(`review_events` と同じ扱い)。
+ *
+ * `review_events` に `correct` を入れて代用していない。あれは結果が2値の復習ログで
+ * 「導入した」を表せず、混ぜるとステージ計算が最初から1段ずれる。
+ *
+ * `sentence_id` に UNIQUE を張っていないのは、これがフラグではなく履歴だから。
+ * 同じ回を読み直したときに制約違反で落ちるより、追記が積まれるほうがログの意図に合う。
+ * 二重計上は書き込み側(既存記録があれば INSERT しない)と
+ * 読み出し側(文ごとに最も古い1件だけを採る)の2段で防ぐ。
+ */
+export const lessonEvents = sqliteTable(
+  'lesson_events',
+  {
+    id: text('id').primaryKey(),
+    sentenceId: text('sentence_id').notNull(),
+    /** 第2段階専用の回(要件定義書 4.1-5)は新出漢字が無いので null */
+    kanjiId: text('kanji_id'),
+    completedAt: integer('completed_at').notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('lesson_events_sentence_id_index').on(table.sentenceId),
+    index('lesson_events_completed_at_index').on(table.completedAt),
+  ]
+);
+
+/**
  * SRS の唯一の真実。**INSERT のみ。UPDATE / DELETE 禁止**(絶対規則5)。
  *
  * 現在のステージはこのログを時系列に畳み込んで求める。1行上書き型にしないのは、

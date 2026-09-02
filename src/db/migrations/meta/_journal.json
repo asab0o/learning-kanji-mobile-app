@@ -15,6 +15,13 @@
       "when": 1787913591724,
       "tag": "0001_polite_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788302619868,
+      "tag": "0002_curly_korvac",
+      "breakpoints": true
     }
   ]
 }
