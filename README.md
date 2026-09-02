@@ -1,11 +1,71 @@
-# Welcome to your Expo app 👋
+# 漢字学習アプリ (Shipaton 2026)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+日本語学習者(JLPT N5レベル)向けの iOS アプリ。**会話文の中で漢字に出会い → SRSで復習 →
+学んだ漢字が別の場面に段階的に再登場する**ことで、「漢字は意味の核である」という感覚を育てる。
 
-> **注意: この README の「Get started」以降は `create-expo-app` の雛形のまま**で、
-> このプロジェクトの実態と合っていない(パッケージマネージャは pnpm、画面は `app/` ではなく
-> `src/app/`、`npm run reset-project` にいたってはこのリポジトリに存在しない)。
-> 開発の入口は `CLAUDE.md` と `docs/README.md`。
+差別化の核は**「読みが変わった」演出**。`日(ひ)` を覚えた学習者が数日後に `日曜日(にちようび)`
+に出会い、「同じ字なのに読みが違う。でも意味は同じ」と気づく瞬間を、全58文のうち8回仕込んである。
+
+- **UIはすべて英語**(Shipaton の必須要件)。日本語が出るのは学習コンテンツ本体だけ
+- **iOSのみ。** Android 対応は今回の範囲外
+- **サーバーを持たない。** 通信は RevenueCat の購入処理だけで、学習データは端末の SQLite に閉じる
+- **ライブAI生成をしない。** 会話文もイラストも事前生成した静的アセット
+
+## 開発を始める
+
+```bash
+pnpm install
+```
+
+**`npm` ではなく `pnpm`。** 動作確認は下記「iOSシミュレータで動かす」。
+
+### コマンド
+
+```bash
+pnpm run check        # typecheck + lint + test + content検証(これが通れば完了)
+pnpm run typecheck    # tsc --noEmit
+pnpm run lint         # eslint
+pnpm run test         # jest
+pnpm run validate:content   # 会話文・漢字データの不変条件
+pnpm run romaji       # ローマ字の下書きを出す(手で書かない)
+pnpm run db:generate  # drizzle-kit でマイグレーション生成(手で書かない)
+```
+
+### ディレクトリ
+
+```
+src/app/          expo-router の画面。ルーティング以外のロジックを置かない
+src/features/     機能単位のロジックとUI (srs, reading, settings, paywall)
+src/db/           Drizzle スキーマ・クエリ・マイグレーション
+src/content/      会話文・漢字マスタ(型付き静的データ)と検証ルール
+src/theme/        テーマトークン定義と Context
+src/types/        アンビエント型定義
+scripts/          check.sh とコンテンツ検証CLI
+```
+
+`src/components/`(機能に依存しない汎用UI)と `src/hooks/` は CLAUDE.md が定めた置き場だが、
+**まだ1つも作っていない**。要るまで作らない。
+
+**レイヤの依存は `app → features → {db, content}` の一方向。**
+feature は `expo-router` を import しない(画面遷移は app 層が持ち、feature には
+`onSelect` / `onBack` のようなコールバックで渡す)。
+
+### ドキュメント
+
+**`docs/` は flow(なぜ・書き換えない) / stock(現在の状態・都度更新) / log(作業録・追記のみ)
+の3分類**で運用している。種別はファイル先頭かディレクトリの `README.md` に書いてあるので、
+書き換える前に必ず見ること。
+
+| ファイル | 読むべきとき |
+|---|---|
+| [`CLAUDE.md`](CLAUDE.md) | **最初に読む。** 絶対規則と作業フロー |
+| [`docs/README.md`](docs/README.md) | ドキュメントを足す/どこに書くか迷ったとき |
+| [`docs/requirements.md`](docs/requirements.md) | 仕様の判断に迷ったとき。**要件の最終権威** |
+| [`docs/architecture.md`](docs/architecture.md) | 画面追加・ディレクトリ配置・状態管理を決めるとき |
+| [`docs/data-model.md`](docs/data-model.md) | DBスキーマ・クエリ・マイグレーションを触るとき |
+| [`docs/content-decisions.md`](docs/content-decisions.md) | 会話文の方針を疑ったとき。**会話文の最終権威** |
+| [`docs/decisions/`](docs/decisions/) | 「なぜこうなっているか」を疑ったとき |
+| [`docs/log/`](docs/log/) | 過去に何をやって何をやり直したかを知りたいとき |
 
 ---
 
@@ -87,55 +147,9 @@ ps aux | grep "Helpers/disclaimer" | grep -v grep
 
 ---
 
-## Get started
+## 技術スタック
 
-1. Install dependencies
+Expo 57 (React Native / expo-router) / TypeScript strict / Drizzle ORM + expo-sqlite /
+react-native-purchases (RevenueCat) / Jest。
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+**Expo のドキュメントはバージョン固定のものを読むこと** — <https://docs.expo.dev/versions/v57.0.0/>
