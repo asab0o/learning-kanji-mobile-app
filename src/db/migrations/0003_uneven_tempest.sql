@@ -1,0 +1,1 @@
+ALTER TABLE `review_events` DROP COLUMN `sentence_id`;

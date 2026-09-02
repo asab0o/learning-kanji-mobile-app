@@ -13,6 +13,8 @@ const COLOR_KEYS = [
   'border',
   'kunBranch',
   'onBranch',
+  'positive',
+  'negative',
 ] as const satisfies readonly (keyof Theme)[];
 
 const entries = Object.entries(themes);

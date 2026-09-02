@@ -22,3 +22,17 @@ export function startOfLocalDay(timestamp: number): number {
 export function isSameLocalDay(a: number, b: number): boolean {
   return startOfLocalDay(a) === startOfLocalDay(b);
 }
+
+/**
+ * n 日後のローカル日の午前0時。
+ *
+ * **`timestamp + days * 86400000` にしない。** 夏時間のある地域(UIが英語である以上、
+ * 学習者の多くは北米・欧州にいる)では、切り替えを跨いだ日の長さが23時間または25時間になり、
+ * ミリ秒を足すと境界が1時間ずれて「次に出る日」が1日ずれる。
+ * `Date` に日付を渡すと桁上がりを処理してくれるので、月末・年末も自然に跨ぐ。
+ */
+export function addLocalDays(timestamp: number, days: number): number {
+  const date = new Date(timestamp);
+
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days).getTime();
+}

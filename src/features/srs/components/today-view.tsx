@@ -20,6 +20,9 @@ interface TodayViewProps {
   /** 新出漢字を引くためのマスタ */
   kanji: KanjiEntry[];
   onSelect: (sentenceId: string) => void;
+  /** 今日出す復習の件数。0 なら押せない一言だけ出す */
+  reviewDueCount?: number;
+  onOpenReviews?: () => void;
   /** 開発ビルドの上限解除。`__DEV__` のときだけ渡す */
   ignoreLimit?: boolean;
   onChangeIgnoreLimit?: (value: boolean) => void;
@@ -29,6 +32,8 @@ export function TodayView({
   lessons,
   kanji,
   onSelect,
+  reviewDueCount = 0,
+  onOpenReviews,
   ignoreLimit,
   onChangeIgnoreLimit,
 }: TodayViewProps) {
@@ -44,6 +49,12 @@ export function TodayView({
         { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 },
       ]}
     >
+      {/*
+        復習を先、新規を後に置く。溜まった復習を片付けてから新しい字に進むほうが、
+        「昨日やったことが返ってくる」順序として自然(要件定義書 4.1 の学習ループ)。
+      */}
+      <Reviews dueCount={reviewDueCount} onOpen={onOpenReviews} />
+
       <View style={styles.header}>
         <Text
           style={{
@@ -167,6 +178,40 @@ function Row({
   );
 }
 
+function Reviews({ dueCount, onOpen }: { dueCount: number; onOpen?: () => void }) {
+  const theme = useTheme();
+
+  if (dueCount === 0) {
+    return <Text style={[styles.notice, { color: theme.textMuted }]}>No reviews due.</Text>;
+  }
+
+  // 件数はあるのに開く手段が渡っていない場合。件数まで隠すと嘘になるので出すだけ出す
+  if (onOpen === undefined) {
+    return (
+      <Text style={[styles.notice, { color: theme.textMuted }]}>{`Reviews: ${dueCount} due`}</Text>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={onOpen}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.row,
+        {
+          backgroundColor: theme.surfaceVeil,
+          borderColor: theme.accent,
+          borderRadius: theme.radius.card,
+          opacity: pressed ? 0.6 : 1,
+        },
+      ]}
+    >
+      <Text style={[styles.reviewsLabel, { color: theme.text }]}>Reviews</Text>
+      <Text style={[styles.state, { color: theme.accent }]}>{`${dueCount} due`}</Text>
+    </Pressable>
+  );
+}
+
 function Notice({ lessons, hasKanji }: { lessons: TodaysLessons; hasKanji: boolean }) {
   const theme = useTheme();
 
@@ -206,6 +251,9 @@ const styles = StyleSheet.create({
   },
   stageTwo: {
     fontSize: 18,
+  },
+  reviewsLabel: {
+    fontSize: 15,
   },
   meaning: {
     fontSize: 15,

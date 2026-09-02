@@ -26,6 +26,9 @@ export const sakura: Theme = {
   // 枝の線とラベル用で、本文サイズの文字色には使わない。
   kunBranch: '#7E9A6B',
   onBranch: '#7F9BBA',
+  // 桜の淡い地の上で読めて、かつ主張しすぎない彩度に落としてある
+  positive: '#5B8C5A',
+  negative: '#B5615F',
 
   radius: {
     bubble: 19,
