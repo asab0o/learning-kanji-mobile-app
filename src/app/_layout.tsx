@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import {
   DefaultTheme as NavigationDefaultTheme,
@@ -9,7 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useDatabase } from '@/db';
-import { configurePurchases } from '@/features/paywall';
+import { EntitlementProvider } from '@/features/paywall';
 import { SettingsProvider } from '@/features/settings';
 import { ThemeBackdrop, ThemeProvider, useTheme } from '@/theme';
 
@@ -32,10 +31,6 @@ const TRANSPARENT_NAVIGATION_THEME = {
  * 画面構成は承認済みプラン(docs/plans/)に沿って足していく。
  */
 export default function RootLayout() {
-  useEffect(() => {
-    configurePurchases();
-  }, []);
-
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -81,12 +76,19 @@ function ThemedShell() {
             INSERT するので、マイグレーション前に呼ぶと落ちる。
           */}
           <SettingsProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              }}
-            />
+            {/*
+              購読状態は DB を必要としないので ready の外でも動くが、Provider の並びを
+              1箇所にまとめたいのでここに置く。configurePurchases() は
+              EntitlementProvider の中で呼ばれる(effect の実行順のため)。
+            */}
+            <EntitlementProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+            </EntitlementProvider>
           </SettingsProvider>
         </NavigationThemeProvider>
       ) : null}

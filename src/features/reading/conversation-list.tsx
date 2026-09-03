@@ -6,7 +6,12 @@
  * (docs/plans/srs-lessons.md)。1日3字の上限を跨いで任意の回をすぐ開けるので、
  * 会話文の検品と、演出・折り返しの実機確認に使う。作り込まない。
  *
- * 課金判定はまだ無いので `isFree` を読んでいない。章のロックは paywall の回の担当。
+ * **この一覧は課金ゲートで絞っていないが、絞られないのは一覧だけ。**
+ * 開くと `src/app/conversation/[id].tsx` のガードに当たるので、未購読では
+ * 第2〜4章の回は paywall に飛ばされて中身を見られない。
+ * **第2章以降を実機で検品するには Test Store で購入しておくこと**
+ * (アンインストールで未購読に戻せる。docs/plans/paywall-gate.md がこの手順を前提に
+ * `__DEV__` 限定の強制アンロックをスコープ外にしている)。
  */
 
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';

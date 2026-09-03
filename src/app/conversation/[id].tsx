@@ -1,15 +1,24 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { getSentence, listKanji } from '@/db';
+import { isSentenceUnlocked, useEntitlement } from '@/features/paywall';
 import { ConversationView } from '@/features/reading';
 import { completeLesson } from '@/features/srs';
 import { useTheme } from '@/theme';
 
-/** 会話文1本の画面。ルーティングと DB の読み出しだけを持つ。 */
+/**
+ * 会話文1本の画面。ルーティングと DB の読み出しだけを持つ。
+ *
+ * 課金ゲートの本線は入口画面(`src/app/index.tsx`)にあり、ここは**保険**。
+ * `learningkanjimobileapp://conversation/<id>` が実在の入口なので、
+ * 画面側にも1枚置かないと有料の会話文が URL で読めてしまう
+ * (docs/plans/paywall-gate.md 決めどころ1)。
+ */
 export default function ConversationScreen() {
   const router = useRouter();
+  const entitlement = useEntitlement();
   const params = useLocalSearchParams<{ id: string | string[] }>();
   // useLocalSearchParams は同名パラメータが複数あると配列を返す。
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -29,6 +38,16 @@ export default function ConversationScreen() {
 
   if (sentence === null) {
     return <NotFound onBack={back} />;
+  }
+
+  // 判定中は待つ。ここで倒すと、購読者が deep link で開くたびに paywall を挟む。
+  // 本文を先に描かないよう、待っている間も何も出さない。
+  if (entitlement.status === 'unknown') {
+    return null;
+  }
+
+  if (!isSentenceUnlocked(sentence, entitlement.unlocked)) {
+    return <Redirect href="/paywall" />;
   }
 
   const newKanjiId = sentence.newKanjiId;
