@@ -19,11 +19,14 @@
 - [ ] **アプリ名を決める** — `app.json` が `learning-kanji-mobile-app` のまま。
       ストア登録に要る(要件9章)
 - [ ] **月額の価格を決める**(要件9章)
-- [ ] **課金ゲートを実装する** — `isFree` はデータにも DB にもあるが、
-      **どの画面も読んでいない**。いまは第2〜4章が無料で読める(要件5.1-11 / 7章)
+- [x] **課金ゲートを実装する** → 完了(`docs/plans/paywall-gate.md`)。
+      第1章のみ無料、第2章以降は `premium` エンタイトルメントで解放
+- [ ] **プライバシーポリシーの URL を用意する**
+      — `src/app/paywall.tsx` の `PRIVACY_URL` が**まだ公開されていない URL を指している**。
+      Apple は購入画面からプライバシーポリシーへ到達できることを求めるので、
+      404 のまま提出すると落ちる。公開したら定数1箇所を差し替える
 - [ ] **開発専用の画面を始末する**
-      - `src/app/paywall-debug.tsx` — paywall UI を実装する回に**削除**する
-        (`docs/plans/paywall-sdk-init.md`)
+      - [x] `src/app/paywall-debug.tsx` — 削除済み(`docs/plans/paywall-gate.md`)
       - `src/app/conversations.tsx` — `__DEV__` ガード済み。**残してよい**(削除不要)
 
 ## 2. Must have のうち未実装のもの(要件5.1)

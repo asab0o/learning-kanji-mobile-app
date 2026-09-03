@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { listKanji, listLessonEvents, listReviewEvents, listSentences } from '@/db';
+import { gateSentences, useEntitlement } from '@/features/paywall';
 import { planTodaysLessons, planTodaysReviews, TodayView } from '@/features/srs';
 
 /**
@@ -11,6 +12,10 @@ import { planTodaysLessons, planTodaysReviews, TodayView } from '@/features/srs'
  * `planTodaysLessons()`(純粋関数)にある。
  *
  * 会話文の一覧は `learningkanjimobileapp://conversations` に移した(開発ビルド専用)。
+ *
+ * 課金ゲートはここで**入力の文の配列を絞る**形で被せる(`gateSentences()`)。
+ * `planTodaysLessons()` も `planTodaysReviews()` も購読を知らないままでよい
+ * (docs/plans/paywall-gate.md 決めどころ1・2)。
  */
 export default function TodayScreen() {
   const router = useRouter();
@@ -27,15 +32,24 @@ export default function TodayScreen() {
     }, [])
   );
 
+  // 判定中(`unknown`)は unlocked=false でロック側に倒す。無料の第1章は常に出るので、
+  // 未購読者から見れば待たされない(docs/plans/paywall-gate.md 決めどころ6)。
+  const entitlement = useEntitlement();
+  const gated = gateSentences({ sentences: snapshot.sentences, unlocked: entitlement.unlocked });
+
   const lessons = planTodaysLessons({
-    sentences: snapshot.sentences,
+    sentences: gated.unlocked,
     completions: snapshot.completions,
     now: snapshot.now,
     limit: ignoreLimit ? Number.POSITIVE_INFINITY : undefined,
   });
 
   // 復習には1日の上限を掛けない。ADR-0003 が抑えたいのは新規の投入速度で、
-  // 復習の件数はその結果として決まる(docs/plans/srs-reviews.md)
+  // 復習の件数はその結果として決まる(docs/plans/srs-reviews.md)。
+  //
+  // **課金ゲートを掛けないのも意図的。** 一度学んだ字は購読が切れても復習に出し続ける
+  // (docs/plans/paywall-gate.md 決めどころ2)。学んだ進捗を取り上げないため、
+  // また購読状態を畳み込みに持ち込むと絶対規則5が壊れるため。
   const reviews = planTodaysReviews({
     kanji: snapshot.kanji,
     lessons: snapshot.completions,
@@ -50,6 +64,10 @@ export default function TodayScreen() {
       onSelect={(id) => router.push({ pathname: '/conversation/[id]', params: { id } })}
       reviewDueCount={reviews.dueCount}
       onOpenReviews={() => router.push('/review')}
+      // 判定中は 'unknown' を渡す。0(= ロック無し)と同一視すると、
+      // 確定までの数百ms「すべて終えた」と嘘をつく経路ができる
+      lockedCount={entitlement.status === 'unknown' ? 'unknown' : gated.lockedCount}
+      onUnlock={() => router.push('/paywall')}
       ignoreLimit={__DEV__ ? ignoreLimit : undefined}
       onChangeIgnoreLimit={__DEV__ ? setIgnoreLimit : undefined}
     />

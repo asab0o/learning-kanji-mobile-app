@@ -23,6 +23,15 @@ interface TodayViewProps {
   /** 今日出す復習の件数。0 なら押せない一言だけ出す */
   reviewDueCount?: number;
   onOpenReviews?: () => void;
+  /**
+   * 課金でロックされている会話文の本数、または判定中を表す `'unknown'`。
+   *
+   * **判定中を 0 で表さない。** 0 は「ロックが無い(= 購読中)」という確定した事実で、
+   * 判定中とは別物。同一視すると、購読状態が確定するまでの数百ms、
+   * 未購読者に「すべて終えた」と嘘をつくことになる(ちょうど転換させたい相手に)。
+   */
+  lockedCount?: number | 'unknown';
+  onUnlock?: () => void;
   /** 開発ビルドの上限解除。`__DEV__` のときだけ渡す */
   ignoreLimit?: boolean;
   onChangeIgnoreLimit?: (value: boolean) => void;
@@ -34,6 +43,8 @@ export function TodayView({
   onSelect,
   reviewDueCount = 0,
   onOpenReviews,
+  lockedCount = 0,
+  onUnlock,
   ignoreLimit,
   onChangeIgnoreLimit,
 }: TodayViewProps) {
@@ -41,6 +52,14 @@ export function TodayView({
   const insets = useSafeAreaInsets();
   const kanjiById = new Map(kanji.map((entry) => [entry.id, entry]));
   const pending = lessons.items.filter((item) => !item.done);
+  const entitlementUnknown = lockedCount === 'unknown';
+  // ロックされた回が実在するか。**「全部終えた」と言えるか**はこれで決まる
+  const hasLocked = !entitlementUnknown && lockedCount > 0;
+  // 導線を出せるかは別問題。押す先が無ければ出しても仕方がない
+  const showUnlock = hasLocked && onUnlock !== undefined;
+  // 無料ぶんを学び切ったかどうかで導線の強さを変える。
+  // 学び切っていれば、そこが行き止まりなのでカードで受け止める。
+  const freeExhausted = lessons.allDone;
 
   return (
     <ScrollView
@@ -100,7 +119,28 @@ export function TodayView({
         「カードが消える」ことではなく**この一文**が終わりの合図になる。
         カードを消さないのは、今日やったことが見えているほうが続くため。
       */}
-      {pending.length === 0 ? <Notice lessons={lessons} hasKanji={kanji.length > 0} /> : null}
+      {pending.length === 0 ? (
+        <Notice
+          lessons={lessons}
+          hasKanji={kanji.length > 0}
+          /*
+            ロック中に「全部終えた」と言うのは嘘になる(続きは有料で存在する)。
+            代わりに下の Unlock カードが終わりの合図になる。
+
+            **判定中も同じく黙る。** ロックの有無がまだ分からない以上、
+            「全部終えた」と言い切れない。数百ms空白になるほうが嘘より安全。
+
+            判定に使うのは `showUnlock` ではなく `hasLocked`。導線を出せるかどうかと、
+            「全部終えた」と言えるかどうかは別。`onUnlock` が渡らない呼び出し側でも
+            嘘はつかない。
+          */
+          suppressAllDone={entitlementUnknown || (hasLocked && freeExhausted)}
+        />
+      ) : null}
+
+      {showUnlock ? (
+        <Unlock lockedCount={lockedCount} exhausted={freeExhausted} onPress={onUnlock} />
+      ) : null}
 
       {onChangeIgnoreLimit === undefined ? null : (
         <View style={styles.debugRow}>
@@ -212,17 +252,82 @@ function Reviews({ dueCount, onOpen }: { dueCount: number; onOpen?: () => void }
   );
 }
 
-function Notice({ lessons, hasKanji }: { lessons: TodaysLessons; hasKanji: boolean }) {
+function Notice({
+  lessons,
+  hasKanji,
+  suppressAllDone,
+}: {
+  lessons: TodaysLessons;
+  hasKanji: boolean;
+  suppressAllDone: boolean;
+}) {
   const theme = useTheme();
 
   // シード前(コンテンツが1件も無い)を「全部終えた」と言わない
   const message = !hasKanji
     ? 'No conversations yet.'
     : lessons.allDone
-      ? "You've finished every conversation for now."
+      ? suppressAllDone
+        ? null
+        : "You've finished every conversation for now."
       : "You're done for today. Come back tomorrow.";
 
+  if (message === null) {
+    return null;
+  }
+
   return <Text style={[styles.notice, { color: theme.textMuted }]}>{message}</Text>;
+}
+
+/**
+ * 有料の章への導線(要件定義書 7章)。
+ *
+ * 無料ぶんを学び切ったらカードで受け止め、そうでなければ末尾の1行に留める。
+ * **学び切る前でも必ず出す**のは、再インストールした購読者が Restore に
+ * 辿り着けるようにするため(docs/plans/paywall-gate.md 決めどころ4)。
+ */
+function Unlock({
+  lockedCount,
+  exhausted,
+  onPress,
+}: {
+  lockedCount: number;
+  exhausted: boolean;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+
+  if (!exhausted) {
+    return (
+      <Pressable onPress={onPress} accessibilityRole="button" hitSlop={8}>
+        <Text style={[styles.unlockLink, { color: theme.accent }]}>Unlock all chapters</Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.unlockCard,
+        {
+          backgroundColor: theme.surfaceVeil,
+          borderColor: theme.accent,
+          borderRadius: theme.radius.card,
+          opacity: pressed ? 0.6 : 1,
+        },
+      ]}
+    >
+      <Text style={{ fontFamily: theme.type.minchoBold, fontSize: 17, color: theme.text }}>
+        Unlock the next 3 chapters
+      </Text>
+      <Text style={[styles.unlockBody, { color: theme.textMuted }]}>
+        {`${lockedCount} more conversations are waiting. See a kanji you know change its reading.`}
+      </Text>
+      <Text style={[styles.unlockCta, { color: theme.accent }]}>See the subscription</Text>
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -265,6 +370,23 @@ const styles = StyleSheet.create({
   },
   notice: {
     fontSize: 14,
+  },
+  unlockLink: {
+    fontSize: 14,
+  },
+  unlockCard: {
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  unlockBody: {
+    fontSize: 13.5,
+    lineHeight: 20,
+  },
+  unlockCta: {
+    fontSize: 14,
+    marginTop: 2,
   },
   debugRow: {
     flexDirection: 'row',
