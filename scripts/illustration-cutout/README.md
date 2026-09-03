@@ -33,24 +33,33 @@ uv sync --project scripts/illustration-cutout
 
 ## 使い方
 
-1. Midjourney の生画像をリポジトリ直下の `assets/temp/`(.gitignore 済み)に置く
-2. `scripts/illustration-cutout/manifest.json` に処理する字を1エントリずつ書く。
-   `key` はその字の `illustrationKey`(`src/content/index.ts` の `KanjiEntry` から引く)
-   ```json
-   [{ "key": "mountain", "kanji": "山", "source": "mountain-v2.png", "figure": false }]
+**manifest は無い。**対象50字は `src/content/index.ts` の `KanjiEntry` から読み、
+生画像はファイル名で紐付ける。既にコードにあるデータを手で複製しないため。
+
+1. 対応表を見て、その字の `illustrationKey` を確認する
    ```
-   `figure` は人物が写っているか(いまは記録のみ。将来の彩度ノーマライズで使う想定。
-   `cutout.py` からは読んでいない)。**学習対象50字にある字だけ**書く
-   (`思` のような画風テスト専用の字は `assets/kanji/` に置き場所が無い)
+   uv run --project scripts/illustration-cutout \
+     scripts/illustration-cutout/cutout.py --list
+   ```
+   (同じ表が `docs/対象漢字リスト.md`「illustrationKey 対応表」にも貼ってある)
+2. Midjourney の生画像を **`assets/temp/<illustrationKey>.png`** として置く
+   (`.gitignore` 済み。`.jpg` / `.jpeg` / `.webp` も可)。例: 山 → `assets/temp/mountain.png`
 3. 実行(リポジトリ直下から):
    ```
    uv run --project scripts/illustration-cutout \
-     scripts/illustration-cutout/cutout.py \
-     --manifest scripts/illustration-cutout/manifest.json
+     scripts/illustration-cutout/cutout.py
    ```
-   `assets/kanji/<key>.png` が出る。既存は上書き(冪等)。
+   `assets/temp/` にある字だけを処理して `assets/kanji/<key>.png` を出し、
+   **まだ生画像が無い字を章ごとに一覧**で出す。既存の出力は上書き(冪等)
 4. 生成後、`src/features/reading/kanji-illustration.tsx` の `ILLUSTRATIONS` に
    `key: require('@/assets/kanji/<key>.png')` を1行足すと画面に出る(このスクリプトの範囲外)
+
+1字だけ焼き直したいときは `--only`:
+
+```
+uv run --project scripts/illustration-cutout \
+  scripts/illustration-cutout/cutout.py --only sky
+```
 
 ## テスト
 
@@ -58,9 +67,10 @@ uv sync --project scripts/illustration-cutout
 uv run --project scripts/illustration-cutout pytest scripts/illustration-cutout
 ```
 
-自動テストは `geometry.py` の純粋関数と、`normalize → save_png` を通した保存後の形
-(1024正方形・中心 ±2%・四辺マージン 6% 以上・再実行でバイト一致)。rembg の抜きの
-善し悪しはシミュレータで3テーマ背景に載せて目視で判断する。
+自動テストは `geometry.py` の純粋関数、`content.py` の `index.ts` 読み取り、
+そして `normalize → save_png` を通した保存後の形(1024正方形・中心 ±2%・
+四辺マージン 6% 以上・再実行でバイト一致)。rembg の抜きの善し悪しは
+シミュレータで3テーマ背景に載せて目視で判断する。
 
 実行時に pymatting の `PERFORMANCE WARNING: ... incomplete Cholesky ...` が出ることが
 あるが、これは前処理器が別方式にフォールバックしただけで、結果には影響しない。

@@ -31,7 +31,8 @@ Midjourney が出した白背景の生画像を、**透過・正方形・サイ�
 |---|---|---|
 | `scripts/illustration-cutout/cutout.py` | 新規 | rembg で透過 → alpha bbox で trim → 正方形へ均等パディング → 1024px を書き出し → 圧縮 |
 | `scripts/illustration-cutout/geometry.py` | 新規 | trim / pad / resize の純粋関数(テスト対象) |
-| `scripts/illustration-cutout/manifest.json` | 新規 | `key`(=illustrationKey)/ `kanji` / `source`(入力ファイル名)/ `figure` の対応表 |
+| `scripts/illustration-cutout/content.py` | 新規 | `src/content/index.ts` から 漢字 ↔ illustrationKey を読む。`--list` の表もここ |
+| `scripts/illustration-cutout/test_content.py` | 新規 | 上記の pytest |
 | `scripts/illustration-cutout/pyproject.toml` | 新規 | uv プロジェクト定義。`requires-python = ">=3.12,<3.13"`、依存に `rembg` `onnxruntime` `pillow` `pytest` |
 | `scripts/illustration-cutout/uv.lock` | 新規 | `uv lock` が生成する推移的依存まで含むロックファイル。コミット対象 |
 | `scripts/illustration-cutout/test_geometry.py` | 新規 | 合成画像で幾何変換を検証する pytest |
@@ -57,13 +58,13 @@ Midjourney が出した白背景の生画像を、**透過・正方形・サイ�
      `margin_ratio` の透明余白を足す
    - `finalize(img, size)` — 指定 px の正方形へ Lanczos 縮小
 3. `cutout.py`(`uv run --project scripts/illustration-cutout scripts/illustration-cutout/cutout.py ...` で実行):
-   - 引数 `--manifest` `--out-root`(既定 `assets/kanji`)`--raw-root`(既定 `assets/temp`)
+   - 引数 `--content`(既定 `src/content/index.ts`)`--raw-root`(既定 `assets/temp`)
+     `--out-root`(既定 `assets/kanji`)`--only KEY...` `--list`
    - 各エントリで `rembg.remove(data, alpha_matting=True, alpha_matting_foreground_threshold=240,
      alpha_matting_erode_size=10)` → `geometry` で正規化 → `<out>/<key>.png` に **1024px 1枚**を書き出し
    - Pillow の 256色パレット化(FASTOCTREE, dither なし)で圧縮して保存。外部ツールなし
    - 既に出力があっても上書き(冪等)。処理結果を表で標準出力に出す(key・入力・出力サイズ)
-4. `manifest.json` に**学習対象50字のうち生画像ができた字**を記入(`key` は
-   `src/content/index.ts` の `illustrationKey`)。まず `mountain`(山)/ `walk`(歩)。
+4. 生画像を `assets/temp/<illustrationKey>.png` として置く。まず `mountain`(山)/ `walk`(歩)。
    `sky`(空)は生画像を撮り直してから。画風テスト専用の `思` は対象外(illustrationKey が無い)
 5. スクリプトを流し、`assets/kanji/*.png` をシミュレータで3テーマ背景に載せて確認
    (暫定の確認画面 or 既存 db-debug に一時表示を足してよい。確認後に剥がす)
@@ -75,7 +76,7 @@ Midjourney が出した白背景の生画像を、**透過・正方形・サイ�
 対象は「学習対象50字のうち生画像ができた字」。今回コミットするのは `mountain`(山)/
 `walk`(歩)の2枚。以下は**この2枚について**の判定。
 
-- [x] `uv run ... cutout.py --manifest ...manifest.json` を実行すると
+- [x] `uv run ... cutout.py` を実行すると
       `assets/kanji/mountain.png` `assets/kanji/walk.png` が生成される
 - [x] 生成された PNG は `1024x1024`・透過あり(P モード + tRNS)で、四隅の alpha が 0、
       縁のアルファ階調が3段以上(実測 99〜110 段 ＝ジャギらない)。
@@ -158,15 +159,15 @@ Midjourney が出した白背景の生画像を、**透過・正方形・サイ�
 - **テスト字のうち 空 は不合格。** 生画像 `sky-v2.png` が「囲み枠＋塗りなしの線画」
   だったため、rembg は枠と雲の輪郭だけを抜き、中央がスカスカ・上下非対称になった
   (bbox 内平均アルファ 6、y ズレ 8.9%)。プランのリスク「空のフレーム」が現実化した形。
-  空 はフレーム無し・塗りありで撮り直したら manifest に `sky` エントリを足して再実行する。
+  空 はフレーム無し・塗りありで撮り直して `assets/temp/sky.png` に置けば再実行で拾われる。
 - **出力ファイル名を漢字から `illustrationKey` に直した(レビューで発覚した blocking)。**
   当初プラン(実装担当が architect 無しで起草)が `assets/kanji/<漢字>.png` と書いており、
   そのまま実装して `山.png` `歩.png` `思.png` をコミットしていた。しかし
   `docs/architecture.md` のアセット規約は「英語スラッグ(`illustrationKey`)」で、
   `src/content/index.ts` の実データ(`mountain` / `walk` …)と
   `src/features/reading/kanji-illustration.tsx` の `ILLUSTRATIONS` map がその契約に依存している。
-  漢字ファイル名のままだとアセットを登録できず成果が使えない。`manifest.json` に `key` を
-  持たせ、出力名を `<key>.png` に変更。コミット済みだった3枚を作り直し。
+  漢字ファイル名のままだとアセットを登録できず成果が使えない。出力名を `<key>.png` に変更し、
+  コミット済みだった3枚を作り直し。
 - **`思` はコミット対象外。** 学習対象50字の `KanjiEntry` に `思` は無い
   (画風テスト専用の字。`docs/requirements.md` 5.4)。`illustrationKey` が無いので
   `assets/kanji/` に置き場所が無い。今回コミットするのは `mountain` / `walk` の2枚。
@@ -194,12 +195,28 @@ Midjourney が出した白背景の生画像を、**透過・正方形・サイ�
 - **受け入れ条件1(実行すると生成される)は実装者の実行記録**。生画像が `assets/temp/`
   (gitignore)にしか無いため他マシンでは再現不能。生画像を repo に入れない設計の裏返し。
 
+### 2026-09-04 manifest をやめた(PR #21 に追加 push)
+
+- **`manifest.json` を廃止し、対象50字を `src/content/index.ts` から読むようにした。**
+  manifest の4フィールドのうち人が決めているのは `source` だけで、`key` と `kanji` は
+  `KanjiEntry` にある同じデータの手動複製だった。50字ぶん転記すると `key` の打ち間違いが
+  規約違反のファイル名を静かに生む(このプランで実際に踏んだ blocking と同じ種類の事故)。
+- 生画像は **`assets/temp/<illustrationKey>.png`** というファイル名の規約で紐付ける。
+  `cutout.py` は `assets/temp/` にある字だけ処理し、**残りを章ごとに一覧で出す**
+  (「処理済み 3 字 / 残り 47 字」)。50枚バッチの進捗管理がタダで付いてくる。
+- `--list` で 漢字 ↔ illustrationKey の markdown 表を出せる。
+  `docs/対象漢字リスト.md`「illustrationKey 対応表」はこの出力を貼ったもので、
+  手で保守しない。`--only KEY` で1字だけ焼き直せる。
+- `content.py`(TS を正規表現で読む)＋ pytest 6件を追加。テストは28件に。
+  **`meaning: 'cheap, at ease'` のように値にカンマが入る行で最初の正規表現が壊れた**ため、
+  クォート内を貪欲に取る形に直し、その回帰テストを入れた。
+
 ## 後続タスク
 
 1. **`ILLUSTRATIONS` 配線＋暗背景の実機確認** — `src/features/reading/kanji-illustration.tsx`
    の `ILLUSTRATIONS` に `mountain` / `walk` の `require()` を足す(2行、README:52-53 に手順)。
    そのうえでシミュレータ3テーマで白い矩形が出ないことを確認する。
 2. **`sky` のフレーム無し再生成** — §2 プロンプトに `--no border, frame` を効かせ、
-   塗りのある雲で撮り直し。`manifest.json` に `sky` エントリを足して再実行。
+   塗りのある雲で撮り直し。`assets/temp/sky.png` に置いて `--only sky` で再実行。
 3. **暗テーマでの線画の載せ方** — 黒い線が「東京の夜景」で沈む。明るいカードに載せる等。
    要件 5.3(視認性)。イラスト側では解けない。
