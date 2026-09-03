@@ -15,8 +15,9 @@ Midjourney が出した白背景の生画像を、**透過・正方形・1024px*
 ## 必要なもの
 
 - [`uv`](https://docs.astral.sh/uv/) … `brew install uv`
-- ネットワーク(初回のみ)。rembg のモデル(isnet-general-use, 約180MB)を
-  `~/.u2net/` にダウンロードする
+- ネットワーク(初回実行時のみ)。**手順は無い** — 初回に `cutout.py` を動かすと
+  rembg がモデル(isnet-general-use, 約170MB)を `~/.u2net/` に自動で取ってくる。
+  数分かかる。2回目以降はキャッシュを使うのでオフラインで動く
 
 圧縮は Pillow の 256 色パレット化(FASTOCTREE)で完結する。外部ツールは不要。
 フラットな絵なので減色の劣化はほぼ無く、RGBA PNG のまま保存するより 4〜5 倍小さくなる
