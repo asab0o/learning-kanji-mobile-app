@@ -25,6 +25,16 @@ run "lint"      pnpm exec eslint .
 run "test"      pnpm exec jest --silent --passWithNoTests
 run "content"   pnpm exec tsx scripts/validate-content.ts
 
+# scripts/illustration-cutout の pytest。uv が無い環境(CI・他マシン)では落とさずに
+# スキップするが、黙って通すと「テストが無い」のと区別がつかないので必ず表示する。
+if command -v uv >/dev/null 2>&1; then
+  run "python"  uv run --project scripts/illustration-cutout \
+    pytest scripts/illustration-cutout -q
+else
+  echo "── python"
+  echo "   ⚠ python — uv が無いためスキップ (scripts/illustration-cutout のテストは未実行)"
+fi
+
 if [ $fail -eq 0 ]; then
   echo "全チェック通過"
 else
