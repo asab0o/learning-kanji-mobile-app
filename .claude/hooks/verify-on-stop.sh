@@ -36,7 +36,7 @@ counter_file="$state_dir/check-attempts-${session_id}"
 # 数十秒待たせないため。
 if git rev-parse --git-dir >/dev/null 2>&1; then
   changed=$(git status --porcelain -- \
-    '*.ts' '*.tsx' '*.js' '*.jsx' '*.json' 'package.json' 2>/dev/null)
+    '*.ts' '*.tsx' '*.js' '*.jsx' '*.py' '*.json' 'package.json' 2>/dev/null)
   if [ -z "$changed" ]; then
     rm -f "$counter_file"
     exit 0
