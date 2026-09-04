@@ -2,7 +2,7 @@
 
     uv run --project scripts/illustration-cutout pytest scripts/illustration-cutout
 
-rembg には触れない(cutout の rembg import は関数ローカルなので import cutout は安全)。
+背景の抜き方そのもの(keying.py)は test_keying.py で見る。
 """
 
 from __future__ import annotations

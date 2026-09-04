@@ -9,30 +9,30 @@
 - 出力は `assets/kanji/<illustrationKey>.png`。1辺 1024px・P モード PNG(256色 + tRNS)。
   これがアプリ同梱の正(`docs/architecture.md` のアセット規約)。
 - **アプリのランタイムからは呼ばない。** 手元で1回動かす開発ツールで、成果の PNG だけが同梱される。
-- 同じ生画像 + 同じ rembg モデル + 同じマシンなら、出力バイト列は毎回同じ
-  (量子化は `dither=NONE`、Pillow は tIME チャンクを書かない)。
+- 背景の抜き方は `keying.py`(外周と地続きの白だけを抜く)。同じ生画像なら出力バイト列は
+  毎回同じ(乱数も学習モデルも使わず、量子化は `dither=NONE`、Pillow は tIME を書かない)。
 """
 
 from __future__ import annotations
 
 import argparse
-import io
 import sys
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from content import Kanji, markdown_table, read_kanji  # noqa: E402
 from geometry import finalize, pad_to_square, trim_to_alpha  # noqa: E402
+from keying import key_out  # noqa: E402
 
 OUT_SIZE = 1024
 MARGIN_RATIO = 0.08
-# rembg のハローが1画素混じっても bbox が暴れないよう、この alpha 未満は背景扱いで trim する。
+# 縁の feather が1画素混じっても bbox が暴れないよう、この alpha 未満は背景扱いで trim する。
 TRIM_ALPHA_THRESHOLD = 8
-# フラットな線画では u2net より isnet-general-use のほうが細い輪郭を残しやすい。
-# 迷ったらここを "u2net" に戻してテスト字で見比べる(plan のリスク欄)。
-MODEL = "isnet-general-use"
+# 被写体がこの割合を切ったら、抜きすぎ(ほぼ空のフレーム)を疑って警告する。
+MIN_SUBJECT_RATIO = 0.005
 # Midjourney からの持ち込みでありうる拡張子。先に見つかったものを使う
 RAW_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 
@@ -45,19 +45,10 @@ def find_raw(raw_root: Path, key: str) -> Path | None:
     return None
 
 
-def cut_out(src: Path, session) -> Image.Image:
-    """rembg で背景を抜く。alpha matting で縁の紙粒テクスチャのハローを削る。"""
-    from rembg import remove
-
-    out = remove(
-        src.read_bytes(),
-        session=session,
-        alpha_matting=True,
-        alpha_matting_foreground_threshold=240,
-        alpha_matting_background_threshold=10,
-        alpha_matting_erode_size=10,
-    )
-    return Image.open(io.BytesIO(out)).convert("RGBA")
+def cut_out(src: Path) -> Image.Image:
+    """白背景を抜く。詳細と、この方式を選んだ理由は `keying.py`。"""
+    with Image.open(src) as raw:
+        return key_out(raw)
 
 
 def normalize(img: Image.Image) -> Image.Image:
@@ -76,6 +67,11 @@ def save_png(img: Image.Image, dest: Path) -> int:
     palette = img.quantize(colors=256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
     palette.save(dest, "PNG", optimize=True)
     return dest.stat().st_size
+
+
+def subject_ratio(img: Image.Image) -> float:
+    """不透明ピクセルの割合。抜きすぎの検知だけに使う。"""
+    return float((np.asarray(img.getchannel("A")) >= 128).mean())
 
 
 def report(done: list[tuple[Kanji, str, str]], todo: list[Kanji], out_root: Path) -> None:
@@ -126,16 +122,23 @@ def main() -> int:
         report([], todo, args.out_root)
         return 1
 
-    from rembg import new_session
-
-    session = new_session(MODEL)
     done: list[tuple[Kanji, str, str]] = []
+    thin: list[str] = []
     for kanji, raw in found:
         dest = args.out_root / f"{kanji.key}.png"
-        kb = save_png(normalize(cut_out(raw, session)), dest) / 1024
+        cut = cut_out(raw)
+        if subject_ratio(cut) < MIN_SUBJECT_RATIO:
+            thin.append(kanji.key)
+        kb = save_png(normalize(cut), dest) / 1024
         done.append((kanji, raw.name, f"{kb:.0f}KB"))
 
     report(done, todo, args.out_root)
+    if thin:
+        print(
+            f"\n!! ほぼ全部抜けた: {', '.join(thin)}"
+            "\n   生画像の背景が白でないか、被写体の輪郭が閉じていない可能性がある",
+            file=sys.stderr,
+        )
     return 0
 
 

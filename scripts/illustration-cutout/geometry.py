@@ -1,4 +1,4 @@
-"""trim / pad / resize の純粋関数。rembg には依存しないのでテストしやすい。
+"""trim / pad / resize の純粋関数。抜き方(keying.py)に依存しないのでテストしやすい。
 
 ここが illustration-cutout で唯一の自動テスト対象(test_geometry.py)。
 """
@@ -14,12 +14,12 @@ def trim_to_alpha(img: Image.Image, threshold: int = 1) -> Image.Image:
     """外周の(ほぼ)透明な帯を落とす。
 
     alpha が `threshold` 未満のピクセルは背景扱い。既定の 1 は「完全透明だけ落とす」。
-    rembg の出力は縁に alpha=1〜5 のハローを残すことがあり、それを 1 画素でも被写体と
-    みなすと bbox が大きく暴れる(被写体が実効数分の1に縮む)。呼び出し側は
-    `threshold=8` 程度を渡してハローを無視する。
+    縁の feather は alpha=1〜5 の薄い帯を残し、それを 1 画素でも被写体とみなすと
+    bbox が大きく暴れる(被写体が実効数分の1に縮む)。呼び出し側は
+    `threshold=8` 程度を渡してこの帯を無視する。
 
     RGBA 以外は変換する。閾値以上のピクセルが1つも無ければ切り詰めず元画像を返す
-    (真っ白＝rembg が全部抜いた、などの異常ケースで落とさないため)。
+    (真っ白＝背景として全部抜けた、などの異常ケースで落とさないため)。
     """
     if img.mode != "RGBA":
         img = img.convert("RGBA")
