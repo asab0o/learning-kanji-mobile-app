@@ -6,3 +6,4 @@ export { ConversationView } from './conversation-view';
 export { ConversationList } from './conversation-list';
 export { KanjiFocus } from './kanji-focus';
 export { KanjiIllustration, illustrationSource } from './kanji-illustration';
+export { KanjiList } from './kanji-list';
