@@ -25,6 +25,7 @@ import { useTheme } from '@/theme/theme-context';
  */
 const ILLUSTRATIONS: Record<string, number> = {
   above: require('@/assets/kanji/above.png'),
+  below: require('@/assets/kanji/below.png'),
   big: require('@/assets/kanji/big.png'),
   book: require('@/assets/kanji/book.png'),
   buy: require('@/assets/kanji/buy.png'),
@@ -32,10 +33,12 @@ const ILLUSTRATIONS: Record<string, number> = {
   come: require('@/assets/kanji/come.png'),
   country: require('@/assets/kanji/country.png'),
   day: require('@/assets/kanji/day.png'),
+  early: require('@/assets/kanji/early.png'),
   eat: require('@/assets/kanji/eat.png'),
   exit: require('@/assets/kanji/exit.png'),
   expensive: require('@/assets/kanji/expensive.png'),
   fire: require('@/assets/kanji/fire.png'),
+  flower: require('@/assets/kanji/flower.png'),
   go: require('@/assets/kanji/go.png'),
   hear: require('@/assets/kanji/hear.png'),
   heaven: require('@/assets/kanji/heaven.png'),
@@ -44,6 +47,8 @@ const ILLUSTRATIONS: Record<string, number> = {
   interval: require('@/assets/kanji/interval.png'),
   language: require('@/assets/kanji/language.png'),
   learn: require('@/assets/kanji/learn.png'),
+  live: require('@/assets/kanji/live.png'),
+  meet: require('@/assets/kanji/meet.png'),
   money: require('@/assets/kanji/money.png'),
   moon: require('@/assets/kanji/moon.png'),
   mountain: require('@/assets/kanji/mountain.png'),
@@ -66,6 +71,7 @@ const ILLUSTRATIONS: Record<string, number> = {
   walk: require('@/assets/kanji/walk.png'),
   water: require('@/assets/kanji/water.png'),
   write: require('@/assets/kanji/write.png'),
+  year: require('@/assets/kanji/year.png'),
 };
 
 /** 画像があれば `require()` の戻り値、無ければ null */
