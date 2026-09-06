@@ -1,9 +1,10 @@
 /**
  * 漢字の象徴イラスト(要件定義書 5.1-3)。
  *
- * **画像はまだ1枚も無い。** 50字ぶんを AI生成 → 手動選別する作業が別に走っており
- * (要件定義書 5.4)、それを待つと画面が作れないので、
- * **1枚も無い状態で成立する形**にしてある。生成できた字から `ILLUSTRATIONS` に足す。
+ * **50字が揃うのを待たずに成立する形**にしてある(要件定義書 5.4)。
+ * 未投入の字はプレースホルダに落ちるので、生成できた字から `ILLUSTRATIONS` に足せばよい。
+ * **ここに進捗の数を書かない。** 数は増えるたびに嘘になる。何字入ったかは
+ * `cutout.py` が「処理済み N 字 / 残り M 字」で出すので、そちらが唯一の情報源。
  *
  * `require()` を動的に組み立てられない(Metro が静的解析で解決するため)ので、
  * ここは手書きのマップにするしかない。`KanjiEntry.illustrationKey` が鍵になる。
@@ -22,7 +23,56 @@ import { useTheme } from '@/theme/theme-context';
  * 例: `mountain: require('@/assets/kanji/mountain.png')`
  * `assets/temp/` の試作は `.gitignore` されているので参照しない。
  */
-const ILLUSTRATIONS: Record<string, number> = {};
+const ILLUSTRATIONS: Record<string, number> = {
+  above: require('@/assets/kanji/above.png'),
+  below: require('@/assets/kanji/below.png'),
+  big: require('@/assets/kanji/big.png'),
+  book: require('@/assets/kanji/book.png'),
+  buy: require('@/assets/kanji/buy.png'),
+  cheap: require('@/assets/kanji/cheap.png'),
+  come: require('@/assets/kanji/come.png'),
+  country: require('@/assets/kanji/country.png'),
+  day: require('@/assets/kanji/day.png'),
+  early: require('@/assets/kanji/early.png'),
+  eat: require('@/assets/kanji/eat.png'),
+  exit: require('@/assets/kanji/exit.png'),
+  expensive: require('@/assets/kanji/expensive.png'),
+  fire: require('@/assets/kanji/fire.png'),
+  flower: require('@/assets/kanji/flower.png'),
+  go: require('@/assets/kanji/go.png'),
+  hear: require('@/assets/kanji/hear.png'),
+  heaven: require('@/assets/kanji/heaven.png'),
+  house: require('@/assets/kanji/house.png'),
+  inside: require('@/assets/kanji/inside.png'),
+  interval: require('@/assets/kanji/interval.png'),
+  language: require('@/assets/kanji/language.png'),
+  learn: require('@/assets/kanji/learn.png'),
+  live: require('@/assets/kanji/live.png'),
+  meet: require('@/assets/kanji/meet.png'),
+  money: require('@/assets/kanji/money.png'),
+  moon: require('@/assets/kanji/moon.png'),
+  mountain: require('@/assets/kanji/mountain.png'),
+  name: require('@/assets/kanji/name.png'),
+  outside: require('@/assets/kanji/outside.png'),
+  person: require('@/assets/kanji/person.png'),
+  rain: require('@/assets/kanji/rain.png'),
+  read: require('@/assets/kanji/read.png'),
+  rest: require('@/assets/kanji/rest.png'),
+  river: require('@/assets/kanji/river.png'),
+  see: require('@/assets/kanji/see.png'),
+  sky: require('@/assets/kanji/sky.png'),
+  small: require('@/assets/kanji/small.png'),
+  soil: require('@/assets/kanji/soil.png'),
+  speak: require('@/assets/kanji/speak.png'),
+  stand: require('@/assets/kanji/stand.png'),
+  time: require('@/assets/kanji/time.png'),
+  tree: require('@/assets/kanji/tree.png'),
+  understand: require('@/assets/kanji/understand.png'),
+  walk: require('@/assets/kanji/walk.png'),
+  water: require('@/assets/kanji/water.png'),
+  write: require('@/assets/kanji/write.png'),
+  year: require('@/assets/kanji/year.png'),
+};
 
 /** 画像があれば `require()` の戻り値、無ければ null */
 export function illustrationSource(illustrationKey: string): number | null {
