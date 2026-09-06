@@ -85,5 +85,25 @@ export default function ReviewScreen() {
     }
   }, [router]);
 
-  return <ReviewSessionView session={session} onSelect={select} onNext={next} onQuit={quit} />;
+  /**
+   * 復習を終えてから推測クイズへ(要件定義書 4.4「数日後」)。
+   *
+   * `replace` にするのは、クイズから戻ったときに解き終わったセッションを見せないため。
+   * **セッションの中には差し込まない。** クイズをキューに混ぜると、その結果を SRS に
+   * 入れていないこと(絶対規則10)が外から検証できなくなる
+   * (`features/srs/session.ts` 冒頭 / docs/plans/guess-quiz.md 差分4)。
+   */
+  const quiz = useCallback(() => {
+    router.replace('/quiz?slot=review');
+  }, [router]);
+
+  return (
+    <ReviewSessionView
+      session={session}
+      onSelect={select}
+      onNext={next}
+      onQuit={quit}
+      onQuiz={quiz}
+    />
+  );
 }

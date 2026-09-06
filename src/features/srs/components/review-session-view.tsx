@@ -23,9 +23,24 @@ interface ReviewSessionViewProps {
   onSelect: (choice: string) => void;
   onNext: () => void;
   onQuit: () => void;
+  /**
+   * 全部終えたあとに出す推測クイズへの導線(要件定義書 4.4)。
+   *
+   * **セッションの中には混ぜない。** キューにクイズを差し込むと、クイズの結果を
+   * SRS に入れていない(絶対規則10)ことが外から検証できなくなる
+   * (`session.ts` 冒頭 / docs/plans/guess-quiz.md 差分4)。ここがやるのは
+   * 終了画面にリンクを1つ足すことだけで、セッションのロジックには触れない。
+   */
+  onQuiz?: () => void;
 }
 
-export function ReviewSessionView({ session, onSelect, onNext, onQuit }: ReviewSessionViewProps) {
+export function ReviewSessionView({
+  session,
+  onSelect,
+  onNext,
+  onQuit,
+  onQuiz,
+}: ReviewSessionViewProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { current, answered } = session;
@@ -54,20 +69,59 @@ export function ReviewSessionView({ session, onSelect, onNext, onQuit }: ReviewS
       {current === null ? (
         <View style={styles.done}>
           <Text style={[styles.doneLabel, { color: theme.text }]}>All reviews done.</Text>
-          <Pressable
-            onPress={onQuit}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.cta,
-              {
-                backgroundColor: theme.accent,
-                borderRadius: theme.radius.pill,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Text style={[styles.ctaLabel, { color: theme.onAccent }]}>Back to today</Text>
-          </Pressable>
+          {onQuiz === undefined ? (
+            <Pressable
+              onPress={onQuit}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.cta,
+                {
+                  backgroundColor: theme.accent,
+                  borderRadius: theme.radius.pill,
+                  opacity: pressed ? 0.8 : 1,
+                },
+              ]}
+            >
+              <Text style={[styles.ctaLabel, { color: theme.onAccent }]}>Back to today</Text>
+            </Pressable>
+          ) : (
+            <>
+              <Pressable
+                onPress={onQuiz}
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.cta,
+                  {
+                    backgroundColor: theme.accent,
+                    borderRadius: theme.radius.pill,
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+              >
+                {/* 文言は2段階で決めた(2026-09-06 の実機確認)。
+                    `Can you read this?` を捨てたのは、このアプリで "reading" が
+                    Kun / On バッジと「読みが変わった」演出の指す**かなの読み**であり、
+                    学習者に「何と発音するか」と読めてしまうため(訊くのは意味)。
+                    さらに `Bonus:` を冠したのは、**この CTA が意味4択の復習を解き終えた
+                    直後に出る**から。同じ問いがもう1問続くように見えると、ご褒美ではなく
+                    ノルマになる(要件定義書 4.4「ご褒美体験であり成績ではない」)。 */}
+                <Text style={[styles.ctaLabel, { color: theme.onAccent }]}>
+                  Bonus: guess a word
+                </Text>
+              </Pressable>
+              {/* クイズはご褒美なので、押さずに戻れる形にする。
+                  「罰がない」(要件定義書 4.4)は素通りできることでもある */}
+              <Pressable onPress={onQuit} accessibilityRole="button" hitSlop={12}>
+                {({ pressed }) => (
+                  <Text
+                    style={[styles.doneQuit, { color: theme.accent, opacity: pressed ? 0.6 : 1 }]}
+                  >
+                    Back to today
+                  </Text>
+                )}
+              </Pressable>
+            </>
+          )}
         </View>
       ) : (
         <>
@@ -262,6 +316,9 @@ const styles = StyleSheet.create({
   },
   doneLabel: {
     fontSize: 17,
+  },
+  doneQuit: {
+    fontSize: 14,
   },
   cta: {
     alignSelf: 'center',
