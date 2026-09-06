@@ -30,6 +30,10 @@ export type { LessonEvent, NewLessonEvent } from '@/db/queries/lesson-events';
 export { insertReviewEvent, listReviewEvents } from '@/db/queries/review-events';
 export type { NewReviewEvent, ReviewEvent, ReviewResult } from '@/db/queries/review-events';
 
+// 推測クイズの記録。SRS とは別系統で、成績には使わない(絶対規則10)
+export { insertQuizAttempt, listRecentQuizAttempts } from '@/db/queries/quiz-attempts';
+export type { NewQuizAttempt, QuizAttempt, QuizResult } from '@/db/queries/quiz-attempts';
+
 // 設定
 export { getUserSettings, updateUserSettings } from '@/db/queries/user-settings';
 export type { UserSettings } from '@/db/queries/user-settings';

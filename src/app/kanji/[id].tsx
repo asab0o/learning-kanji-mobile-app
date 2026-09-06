@@ -34,10 +34,14 @@ export default function KanjiScreen() {
   }
 
   /**
-   * 学習を終えて入口に戻る。
+   * 学習を終えて推測クイズへ送る(要件定義書 4.4「学習直後」)。
    *
-   * `back()` にしないのは、間に会話文の画面が挟まっているため。1枚ずつ戻すと
-   * 終えたばかりの回をもう一度見せることになるので、積んだぶんをまとめて畳む。
+   * `push` ではなく `replace` にするのは、クイズで `Back` を押したときに、
+   * 終えたばかりの漢字フォーカスへ戻さないため。入口まで畳む処理はクイズ画面が持つ
+   * (`src/app/quiz.tsx` の `done`。間に会話文が挟まっているので1枚ずつは戻さない)。
+   *
+   * **クイズは SRS に何も足さない**(絶対規則10)。復習キューへの登録は直前の
+   * `completeLesson()` で済んでいて、この先のクイズの正誤は出題日に影響しない。
    */
   const complete =
     lessonSentenceId === undefined
@@ -45,11 +49,10 @@ export default function KanjiScreen() {
       : () => {
           completeLesson({ sentenceId: lessonSentenceId, kanjiId: kanji.id });
 
-          if (router.canDismiss()) {
-            router.dismissAll();
-          } else {
-            router.replace('/');
-          }
+          // **今学んだ字を渡す。** 渡さないとクイズは「その日に学んだ字」までしか
+          // 絞れず、1日3字learnedのうち別の字の語が出て唐突に見える
+          // (`features/quiz/selection.ts` の `preferForSlot`)
+          router.replace(`/quiz?slot=lesson&kanji=${kanji.id}`);
         };
 
   return <KanjiFocus kanji={kanji} onBack={back} onComplete={complete} />;

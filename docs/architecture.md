@@ -113,6 +113,7 @@ src/app/index.tsx               今日の学習(1日3字)。入口
 src/app/conversation/[id].tsx   会話文1本
 src/app/kanji/[id].tsx          漢字フォーカス。`?lesson=<文ID>` 付きのときだけ完了 CTA が出る
 src/app/review.tsx              復習セッション(意味の4択)
+src/app/quiz.tsx                推測クイズ「読めるかな?」。`?slot=lesson|review` で難易度の寄せ方が変わる
 src/app/paywall.tsx             課金画面(月額の単一プラン。購入の復元もここ)
 src/app/trees.tsx               漢字一覧グリッド(学習済みの字だけ。出会った語数のバッジ付き)
 src/app/tree/[id].tsx           1字の樹。`See the illustration` でフォーカス画面を「見るだけ」で開く
