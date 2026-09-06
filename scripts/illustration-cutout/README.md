@@ -126,7 +126,7 @@ uv run --project scripts/illustration-cutout pytest scripts/illustration-cutout
 
 | アセット | 理由 | 全走行すると |
 |---|---|---|
-| `big.png` | 開発者が線を手で描き直した(2026-09-06)。生画像に反映されていない | 手描き前に戻る |
+| `big.png` | 開発者が線を Photopea で描き直した(2026-09-06)。生画像に反映されていない | 手描き前に戻る |
 | `fire.png` | 同上。加えて焼き込まれていた枠の直線を消してある | 直線が戻り、フレーミングも 2/3 スケールに戻る |
 | `heaven.png` | 生画像が手元に無い | 出力されない |
 
