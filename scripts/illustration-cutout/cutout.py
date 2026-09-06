@@ -33,6 +33,10 @@ MARGIN_RATIO = 0.08
 TRIM_ALPHA_THRESHOLD = 8
 # 被写体がこの割合を切ったら、抜きすぎ(ほぼ空のフレーム)を疑って警告する。
 MIN_SUBJECT_RATIO = 0.005
+# 逆に、被写体がこの割合を超えたら「紙が残っている」を疑って警告する。仕上げで四辺に
+# 8% のマージンを取るので、絵が画面いっぱいでも 0.706 が上限。それに迫る値は、
+# 抜けずに残った紙の矩形がそのまま被写体になったときにしか出ない
+MAX_SUBJECT_RATIO = 0.65
 # Midjourney からの持ち込みでありうる拡張子。先に見つかったものを使う
 RAW_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
 
@@ -124,11 +128,15 @@ def main() -> int:
 
     done: list[tuple[Kanji, str, str]] = []
     thin: list[str] = []
+    solid: list[str] = []
     for kanji, raw in found:
         dest = args.out_root / f"{kanji.key}.png"
         cut = cut_out(raw)
-        if subject_ratio(cut) < MIN_SUBJECT_RATIO:
+        ratio = subject_ratio(cut)
+        if ratio < MIN_SUBJECT_RATIO:
             thin.append(kanji.key)
+        elif ratio > MAX_SUBJECT_RATIO:
+            solid.append(kanji.key)
         kb = save_png(normalize(cut), dest) / 1024
         done.append((kanji, raw.name, f"{kb:.0f}KB"))
 
@@ -137,6 +145,13 @@ def main() -> int:
         print(
             f"\n!! ほぼ全部抜けた: {', '.join(thin)}"
             "\n   生画像の背景が白でないか、被写体の輪郭が閉じていない可能性がある",
+            file=sys.stderr,
+        )
+    if solid:
+        print(
+            f"\n!! 紙が残っているかも: {', '.join(solid)}"
+            "\n   生画像の外周が紙になっているか確認する(額縁は自動で剥がすが、"
+            "厚い枠や白でない背景は剥がせない)",
             file=sys.stderr,
         )
     return 0

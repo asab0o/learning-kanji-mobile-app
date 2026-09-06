@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import numpy as np
-from keying import key_out, paper_mask, paper_level, subject_mask, white_tol
+from keying import frame_depth, key_out, paper_mask, paper_level, subject_mask, white_tol
 from PIL import Image, ImageDraw
 
 WHITE = (255, 255, 255)
@@ -158,3 +158,41 @@ def test_fill_does_not_touch_background_that_reaches_the_edge():
 
     subject = subject_mask(np.asarray(img))
     assert not subject[350, 200], "外へ通じている隙間が埋まっている"
+
+
+def test_a_hairline_dark_frame_does_not_block_the_flood():
+    """最外周1pxが暗いだけで紙が丸ごと残っていた(`live` の生画像)。"""
+    img = _paper()
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((50, 50, 150, 150), outline=INK, width=3)
+    draw.rectangle((0, 0, img.width - 1, img.height - 1), outline=INK, width=1)
+
+    a = _alpha(img)
+    assert a[10, 10] == 0, "額縁に阻まれて外周の紙が残っている"
+    assert a[100, 100] == 255, "枠の内側の白まで抜けている"
+
+
+def test_frame_depth_counts_only_rings_without_any_paper():
+    img = _paper()
+    ImageDraw.Draw(img).rectangle(
+        (0, 0, img.width - 1, img.height - 1), outline=INK, width=3
+    )
+
+    assert frame_depth(np.asarray(img)) == 3
+
+
+def test_frame_depth_is_zero_when_the_paper_reaches_the_edge():
+    img = _paper()
+    ImageDraw.Draw(img).rectangle((50, 50, 150, 150), fill=INK)
+
+    assert frame_depth(np.asarray(img)) == 0
+
+
+def test_a_thick_frame_is_not_peeled_away_forever():
+    """厚い枠は額縁ではなく絵。剥がし続けて画像を食い潰さない。"""
+    img = _paper()
+    ImageDraw.Draw(img).rectangle(
+        (0, 0, img.width - 1, img.height - 1), outline=INK, width=40
+    )
+
+    assert frame_depth(np.asarray(img)) == 8

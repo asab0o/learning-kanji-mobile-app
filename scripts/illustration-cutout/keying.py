@@ -9,7 +9,9 @@ alpha 0、alpha matting を切っても 15)。
 内側の白は定義上ぜったいに背景にならない。おまけにモデルのダウンロードが要らず、
 完全に決定論的で、1枚あたり数十msで終わる。
 
-**この方式が前提にすること**: 被写体が紙より暗い輪郭線で閉じていること。線が途切れて
+**この方式が前提にすること**: (1) 画像の外周が紙であること。最外周に暗い額縁が
+あるとフラッドフィルの種が取れず1画素も抜けないので、先に剥がす(`frame_depth`)。
+(2) 被写体が紙より暗い輪郭線で閉じていること。線が途切れて
 いると、そこから紙の白が内側へ流れ込む(`MAX_HOLE_RATIO` で小さい流れ込みは埋め戻すが、
 大きく破れていると救えない)。
 
@@ -30,6 +32,10 @@ from scipy.ndimage import binary_closing, binary_erosion, generate_binary_struct
 WHITE_MARGIN = 5
 # 測った紙の値がここから外れたら生画像がおかしい。安全側に丸める
 WHITE_TOL_RANGE = (200, 253)
+# 生画像の最外周に、紙より暗い数pxの額縁が付いていることがある(書き出しや加工の副産物)。
+# 額縁があると「外周と地続きの白」の種が1つも取れず、紙が丸ごと残る。この厚みまでは
+# 剥がしてから抜く。仕上げで 8% のマージンを取り直すので、絵そのものは欠けない
+FRAME_MAX_DEPTH = 8
 # 淡い色面(薄い水色の空、水彩の草地)には白判定に届く粒が散る。背景がこの半径より
 # 細く入り込んだ筋は埋める。広い紙の余白は残るので、腕と胴の隙間までは埋まらない
 CLOSE_RADIUS = 6
@@ -78,6 +84,35 @@ def paper_mask(rgb: np.ndarray, tol: int | None = None) -> np.ndarray:
     if outer.size == 0:
         return np.zeros(white.shape, dtype=bool)
     return np.isin(labels, outer)
+
+
+def frame_depth(rgb: np.ndarray, tol: int | None = None, max_depth: int = FRAME_MAX_DEPTH) -> int:
+    """最外周に張り付いた暗い額縁の厚みを測る。
+
+    この方式は「画像の外周は紙」を前提にしている(モジュール冒頭)。前提が崩れると
+    `paper_mask` は空マスクを返し、抜きが甘いのではなく **1画素も抜けない**。
+    2026-09-06 実測: `live` の生画像は最外周1pxだけが暗く(min チャンネル中央値 21、
+    3px 内側は 249)、紙が丸ごと残ったまま焼き込まれていた。
+
+    白が1画素も無いリングはフラッドフィルの種になり得ないので、外から順に数えて剥がす。
+    紙が外周に届いている普通の生画像では 0 を返して何もしない。
+    """
+    if tol is None:
+        tol = white_tol(rgb)
+    v = rgb.min(axis=2)
+    h, w = v.shape
+    depth = 0
+    while depth < max_depth and 2 * depth + 1 < min(h, w):
+        rings = (
+            v[depth, depth : w - depth],
+            v[h - 1 - depth, depth : w - depth],
+            v[depth : h - depth, depth],
+            v[depth : h - depth, w - 1 - depth],
+        )
+        if any((ring >= tol).any() for ring in rings):
+            break
+        depth += 1
+    return depth
 
 
 def fill_leaks(subject: np.ndarray, max_hole: int) -> np.ndarray:
@@ -132,8 +167,17 @@ def key_out(
     edge_shrink: int = EDGE_SHRINK,
     feather: float = FEATHER,
 ) -> Image.Image:
-    """白背景を抜いた RGBA を返す。色は生画像のまま、alpha だけを作る。"""
+    """白背景を抜いた RGBA を返す。色は生画像のまま、alpha だけを作る。
+
+    額縁付きの生画像は先に額縁を落とすので、出力が入力より小さくなることがある
+    (`frame_depth`)。仕上げの `geometry.normalize` が alpha で trim して正方形に
+    詰め直すため、サイズが変わっても後段には影響しない。
+    """
     rgb = np.asarray(img.convert("RGB"))
+    depth = frame_depth(rgb)
+    if depth:
+        rgb = rgb[depth:-depth, depth:-depth]
+        img = img.crop((depth, depth, img.width - depth, img.height - depth))
     subject = subject_mask(rgb, tol, close_radius, min_object, max_hole_ratio)
     if edge_shrink > 0:
         # border_value=1 で「画像の外は被写体」と見なし、端に接した被写体を削らない
