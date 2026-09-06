@@ -16,8 +16,11 @@
       — `src/features/paywall/purchases.ts` が `test_...`(Test Store)のまま。
       **SDK 自身が「Test Store のキーで提出したアプリは審査で落ちる」と警告している**
       (2026-09-03 に React Native DevTools で確認)。App Store Connect 登録後に `appl_...` へ
-- [ ] **アプリ名を決める** — `app.json` が `learning-kanji-mobile-app` のまま。
-      ストア登録に要る(要件9章)
+- [x] **アプリ名を決める** → `Kanji Encounter` に確定。`app.json` の `name` を変更済み(#26)、
+      App Store Connect にも App レコード作成済み(Bundle ID `com.asakiita.learningkanji`)
+- [ ] **EU Trader Status を申告する** — App Store Connect の Apps 一覧に出る警告。
+      未提出だと EU の App Store から削除される(DSA対応)。個人開発者として
+      Non-trader / Trader のどちらに該当するか判断して申告する
 - [ ] **月額の価格を決める**(要件9章)
 - [x] **課金ゲートを実装する** → 完了(`docs/plans/paywall-gate.md`)。
       第1章のみ無料、第2章以降は `premium` エンタイトルメントで解放
