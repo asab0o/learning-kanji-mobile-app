@@ -14,6 +14,7 @@ export {
   getSentence,
   listKanji,
   listSentences,
+  listWords,
   listWordsByKanji,
 } from '@/db/queries/content';
 

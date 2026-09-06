@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 
-import { listKanji, listLessonEvents, listReviewEvents, listSentences } from '@/db';
+import { listKanji, listLessonEvents, listReviewEvents, listSentences, listWords } from '@/db';
 import { gateSentences, useEntitlement } from '@/features/paywall';
 import { planTodaysLessons, planTodaysReviews, TodayView } from '@/features/srs';
+import { buildTreeIndex } from '@/features/tree';
 
 /**
  * 入口画面「今日の学習」(要件定義書 4.1 / 5.1-8)。
@@ -57,6 +58,13 @@ export default function TodayScreen() {
     now: snapshot.now,
   });
 
+  // 樹の導線に出す「学習済みの字数」。誰を数えるかは `buildTreeIndex()` に任せる
+  const trees = buildTreeIndex({
+    kanji: snapshot.kanji,
+    words: snapshot.words,
+    lessons: snapshot.completions,
+  });
+
   return (
     <TodayView
       lessons={lessons}
@@ -68,6 +76,9 @@ export default function TodayScreen() {
       // 確定までの数百ms「すべて終えた」と嘘をつく経路ができる
       lockedCount={entitlement.status === 'unknown' ? 'unknown' : gated.lockedCount}
       onUnlock={() => router.push('/paywall')}
+      metKanjiCount={trees.met.length}
+      totalKanjiCount={snapshot.kanji.length}
+      onOpenTrees={() => router.push('/trees')}
       ignoreLimit={__DEV__ ? ignoreLimit : undefined}
       onChangeIgnoreLimit={__DEV__ ? setIgnoreLimit : undefined}
     />
@@ -78,6 +89,7 @@ function read() {
   return {
     sentences: listSentences(),
     kanji: listKanji(),
+    words: listWords(),
     completions: listLessonEvents(),
     reviews: listReviewEvents(),
     // 「今日」も画面に入るたびに取り直す。描画中に `Date.now()` を呼ぶと

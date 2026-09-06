@@ -75,3 +75,8 @@ export function getSentence(id: string): Sentence | null {
 export function listWordsByKanji(kanjiId: string): Word[] {
   return db.select().from(words).where(eq(words.kanjiId, kanjiId)).all().map(toWord);
 }
+
+/** 全語。一覧グリッドのバッジ(出会った語数 / 総語数)を1クエリで組むために使う */
+export function listWords(): Word[] {
+  return db.select().from(words).all().map(toWord);
+}

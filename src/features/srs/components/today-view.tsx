@@ -32,6 +32,13 @@ interface TodayViewProps {
    */
   lockedCount?: number | 'unknown';
   onUnlock?: () => void;
+  /**
+   * 漢字の樹への導線(要件定義書 4.5 / 5.1-7)。学習済みの字数 / 全字数。
+   * 3つ揃って渡ったときだけ行を出す。渡らない呼び出し側の見た目は変えない。
+   */
+  metKanjiCount?: number;
+  totalKanjiCount?: number;
+  onOpenTrees?: () => void;
   /** 開発ビルドの上限解除。`__DEV__` のときだけ渡す */
   ignoreLimit?: boolean;
   onChangeIgnoreLimit?: (value: boolean) => void;
@@ -45,6 +52,9 @@ export function TodayView({
   onOpenReviews,
   lockedCount = 0,
   onUnlock,
+  metKanjiCount,
+  totalKanjiCount,
+  onOpenTrees,
   ignoreLimit,
   onChangeIgnoreLimit,
 }: TodayViewProps) {
@@ -136,6 +146,14 @@ export function TodayView({
           */
           suppressAllDone={entitlementUnknown || (hasLocked && freeExhausted)}
         />
+      ) : null}
+
+      {/*
+        樹は「今日の回」の下・Unlock の上。今日やることの後ろに、これまでの蓄積が見える順。
+        学習済みが0字でも出す。空のグリッドが「まだ何も無い」を伝えてくれる。
+      */}
+      {metKanjiCount !== undefined && totalKanjiCount !== undefined && onOpenTrees !== undefined ? (
+        <Trees met={metKanjiCount} total={totalKanjiCount} onOpen={onOpenTrees} />
       ) : null}
 
       {showUnlock ? (
@@ -248,6 +266,30 @@ function Reviews({ dueCount, onOpen }: { dueCount: number; onOpen?: () => void }
     >
       <Text style={[styles.reviewsLabel, { color: theme.text }]}>Reviews</Text>
       <Text style={[styles.state, { color: theme.accent }]}>{`${dueCount} due`}</Text>
+    </Pressable>
+  );
+}
+
+/** 漢字の樹(進捗画面)への導線。件数は「学習済みの字数 / 全字数」 */
+function Trees({ met, total, onOpen }: { met: number; total: number; onOpen: () => void }) {
+  const theme = useTheme();
+
+  return (
+    <Pressable
+      onPress={onOpen}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.row,
+        {
+          backgroundColor: theme.surfaceVeil,
+          borderColor: theme.border,
+          borderRadius: theme.radius.card,
+          opacity: pressed ? 0.6 : 1,
+        },
+      ]}
+    >
+      <Text style={[styles.reviewsLabel, { color: theme.text }]}>Kanji tree</Text>
+      <Text style={[styles.state, { color: theme.textMuted }]}>{`${met} of ${total}`}</Text>
     </Pressable>
   );
 }

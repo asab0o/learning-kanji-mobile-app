@@ -114,6 +114,8 @@ src/app/conversation/[id].tsx   会話文1本
 src/app/kanji/[id].tsx          漢字フォーカス。`?lesson=<文ID>` 付きのときだけ完了 CTA が出る
 src/app/review.tsx              復習セッション(意味の4択)
 src/app/paywall.tsx             課金画面(月額の単一プラン。購入の復元もここ)
+src/app/trees.tsx               漢字一覧グリッド(学習済みの字だけ。出会った語数のバッジ付き)
+src/app/tree/[id].tsx           1字の樹。`See the illustration` でフォーカス画面を「見るだけ」で開く
 src/app/conversations.tsx       開発専用。会話文の全一覧(上限を跨いで任意の回を開く)
 ```
 
