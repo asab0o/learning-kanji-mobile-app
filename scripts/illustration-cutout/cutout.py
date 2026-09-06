@@ -33,9 +33,10 @@ MARGIN_RATIO = 0.08
 TRIM_ALPHA_THRESHOLD = 8
 # 被写体がこの割合を切ったら、抜きすぎ(ほぼ空のフレーム)を疑って警告する。
 MIN_SUBJECT_RATIO = 0.005
-# 逆に、被写体がこの割合を超えたら「紙が残っている」を疑って警告する。仕上げで四辺に
-# 8% のマージンを取るので、絵が画面いっぱいでも 0.706 が上限。それに迫る値は、
-# 抜けずに残った紙の矩形がそのまま被写体になったときにしか出ない
+# 逆に、被写体がこの割合を超えたら「紙が残っている」を疑って警告する。**正規化後**に測る。
+# `pad_to_square` が四辺へ 8% の余白を足すので、絵が枠いっぱいでも上限は 0.84^2 = 0.706。
+# 正規化前だと上限が 1.0 になり、正常な絵(実測の最大は `small` の 0.599)との差が詰まって
+# 誤検知しやすい。正規化後なら正常系の最大は 0.502(`time`)で、この閾値が間に入る
 MAX_SUBJECT_RATIO = 0.65
 # Midjourney からの持ち込みでありうる拡張子。先に見つかったものを使う
 RAW_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
@@ -74,7 +75,7 @@ def save_png(img: Image.Image, dest: Path) -> int:
 
 
 def subject_ratio(img: Image.Image) -> float:
-    """不透明ピクセルの割合。抜きすぎの検知だけに使う。"""
+    """不透明ピクセルの割合。抜きすぎ・抜けなさすぎの検知だけに使う。"""
     return float((np.asarray(img.getchannel("A")) >= 128).mean())
 
 
@@ -132,12 +133,13 @@ def main() -> int:
     for kanji, raw in found:
         dest = args.out_root / f"{kanji.key}.png"
         cut = cut_out(raw)
-        ratio = subject_ratio(cut)
-        if ratio < MIN_SUBJECT_RATIO:
+        norm = normalize(cut)
+        # 抜きすぎは正規化前に見る。ほぼ空のフレームは正規化で拡大されて比率が戻るため
+        if subject_ratio(cut) < MIN_SUBJECT_RATIO:
             thin.append(kanji.key)
-        elif ratio > MAX_SUBJECT_RATIO:
+        elif subject_ratio(norm) > MAX_SUBJECT_RATIO:
             solid.append(kanji.key)
-        kb = save_png(normalize(cut), dest) / 1024
+        kb = save_png(norm, dest) / 1024
         done.append((kanji, raw.name, f"{kb:.0f}KB"))
 
     report(done, todo, args.out_root)

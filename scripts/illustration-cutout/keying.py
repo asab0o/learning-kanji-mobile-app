@@ -102,7 +102,9 @@ def frame_depth(rgb: np.ndarray, tol: int | None = None, max_depth: int = FRAME_
     v = rgb.min(axis=2)
     h, w = v.shape
     depth = 0
-    while depth < max_depth and 2 * depth + 1 < min(h, w):
+    # `2 * (depth + 1)` で見るのは、次に剥がした結果が空配列にならないことを確かめるため。
+    # `2 * depth + 1` だと偶数サイズの画像でちょうど1周ぶん行き過ぎ、クロップが空になる
+    while depth < max_depth and 2 * (depth + 1) < min(h, w):
         rings = (
             v[depth, depth : w - depth],
             v[h - 1 - depth, depth : w - depth],
@@ -174,7 +176,7 @@ def key_out(
     詰め直すため、サイズが変わっても後段には影響しない。
     """
     rgb = np.asarray(img.convert("RGB"))
-    depth = frame_depth(rgb)
+    depth = frame_depth(rgb, tol)
     if depth:
         rgb = rgb[depth:-depth, depth:-depth]
         img = img.crop((depth, depth, img.width - depth, img.height - depth))
