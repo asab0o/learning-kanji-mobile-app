@@ -34,6 +34,8 @@ export function getUserSettings(): UserSettings {
     // ローマ字は既定 OFF(要件定義書 5.2)
     romajiEnabled: false,
     themeId: DEFAULT_THEME_ID,
+    // 初回起動はオンボーディングから始まる(要件定義書 5.1-10)
+    onboardingCompleted: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -54,6 +56,7 @@ export function updateUserSettings(changes: Partial<UserSettings>): UserSettings
       .set({
         romajiEnabled: next.romajiEnabled,
         themeId: next.themeId,
+        onboardingCompleted: next.onboardingCompleted,
         updatedAt: Date.now(),
       })
       .where(eq(userSettings.id, row.id))

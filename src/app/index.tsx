@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 
 import { listKanji, listLessonEvents, listReviewEvents, listSentences, listWords } from '@/db';
 import { gateSentences, useEntitlement } from '@/features/paywall';
+import { useOnboardingCompleted } from '@/features/settings';
 import { planTodaysLessons, planTodaysReviews, TodayView } from '@/features/srs';
 import { buildTreeIndex } from '@/features/tree';
 
@@ -36,6 +37,18 @@ export default function TodayScreen() {
   // 判定中(`unknown`)は unlocked=false でロック側に倒す。無料の第1章は常に出るので、
   // 未購読者から見れば待たされない(docs/plans/paywall-gate.md 決めどころ6)。
   const entitlement = useEntitlement();
+  const onboardingCompleted = useOnboardingCompleted();
+
+  // 初回だけオンボーディングに割り込む(要件定義書 5.1-10)。
+  //
+  // **hooks を全部呼び切ってから返す。** 早期 return を上に置くと、
+  // 初回と2回目以降で hooks の呼び出し数が変わって React が壊れる。
+  // そのぶん未完了でも `read()` が1回走るが、同期で数百行なので体感しない
+  // (docs/plans/onboarding.md リスク)。
+  if (!onboardingCompleted) {
+    return <Redirect href="/onboarding" />;
+  }
+
   const gated = gateSentences({ sentences: snapshot.sentences, unlocked: entitlement.unlocked });
 
   const lessons = planTodaysLessons({

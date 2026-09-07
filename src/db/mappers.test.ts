@@ -314,16 +314,21 @@ describe('parseThemeId', () => {
 });
 
 describe('toUserSettings', () => {
-  it('ローマ字の既定は OFF', () => {
+  it('ローマ字の既定は OFF、オンボーディングは未完了', () => {
     const row: typeof userSettings.$inferSelect = {
       id: '01J0000000000000000000SET0',
       romajiEnabled: false,
       themeId: 'sakura',
+      onboardingCompleted: false,
       createdAt: NOW,
       updatedAt: NOW,
     };
 
-    expect(toUserSettings(row)).toEqual({ romajiEnabled: false, themeId: 'sakura' });
+    expect(toUserSettings(row)).toEqual({
+      romajiEnabled: false,
+      themeId: 'sakura',
+      onboardingCompleted: false,
+    });
   });
 
   it('壊れたテーマ ID が入っていても既定に倒して読める', () => {
@@ -331,10 +336,30 @@ describe('toUserSettings', () => {
       id: '01J0000000000000000000SET0',
       romajiEnabled: true,
       themeId: 'nonexistent',
+      onboardingCompleted: true,
       createdAt: NOW,
       updatedAt: NOW,
     };
 
-    expect(toUserSettings(row)).toEqual({ romajiEnabled: true, themeId: DEFAULT_THEME_ID });
+    expect(toUserSettings(row)).toEqual({
+      romajiEnabled: true,
+      themeId: DEFAULT_THEME_ID,
+      onboardingCompleted: true,
+    });
+  });
+
+  // 列を後から足したので、既存の端末は false になる(docs/plans/onboarding.md)。
+  // 「一度抜けた人が二度と見ない」の土台なので、写し忘れを見張っておく。
+  it('オンボーディング済みの行は true のまま読める', () => {
+    const row: typeof userSettings.$inferSelect = {
+      id: '01J0000000000000000000SET0',
+      romajiEnabled: false,
+      themeId: 'sakura',
+      onboardingCompleted: true,
+      createdAt: NOW,
+      updatedAt: NOW,
+    };
+
+    expect(toUserSettings(row).onboardingCompleted).toBe(true);
   });
 });

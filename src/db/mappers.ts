@@ -158,12 +158,14 @@ export function toSentenceLineRow(
 export interface UserSettings {
   romajiEnabled: boolean;
   themeId: ThemeId;
+  onboardingCompleted: boolean;
 }
 
 export function toUserSettings(row: UserSettingsRow): UserSettings {
   return {
     romajiEnabled: row.romajiEnabled,
     themeId: parseThemeId(row.themeId),
+    onboardingCompleted: row.onboardingCompleted,
   };
 }
 
