@@ -109,6 +109,7 @@ expo-router のファイルベース。`src/app/` にはルーティングと画
 
 ```
 src/app/_layout.tsx             Stack。テーマの地・背景装飾・DB・設定・購読 Provider を敷く
+src/app/onboarding.tsx          初回だけの3画面(要件5.1-10)。入口画面が未完了なら Redirect で送る
 src/app/index.tsx               今日の学習(1日3字)。入口
 src/app/conversation/[id].tsx   会話文1本
 src/app/kanji/[id].tsx          漢字フォーカス。`?lesson=<文ID>` 付きのときだけ完了 CTA が出る

@@ -240,5 +240,16 @@ export const userSettings = sqliteTable('user_settings', {
   /** 既定 OFF(要件定義書 5.2) */
   romajiEnabled: integer('romaji_enabled', { mode: 'boolean' }).notNull(),
   themeId: text('theme_id').notNull(),
+  /**
+   * 初回オンボーディング(要件定義書 5.1-10)を抜けたか。
+   *
+   * 既定 false。**列を後から足したので既存の端末も false になる**が、
+   * 学習途中の人に1回だけ出るのは許容する(docs/plans/onboarding.md)。
+   * `lesson_events` の有無で代用しないのは、Skip した直後の新規ユーザーに
+   * 翌起動でまた出てしまうため。
+   */
+  onboardingCompleted: integer('onboarding_completed', { mode: 'boolean' })
+    .notNull()
+    .default(false),
   ...timestamps,
 });
