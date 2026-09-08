@@ -4,6 +4,10 @@
 
 期限は **2026/9/30**(App Store へ出しきる)。要件8章の目安では **9月上旬に機能凍結**。
 
+**RevenueCat 公式の準備ガイドの目安は「9/16 までに審査へ提出、9/23 までに公開」**
+(審査は小さな不備でも跳ね返され、往復1回に1日以上かかるため。
+https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで実質2週間を切っている。**
+
 **ここに書くのは「出す前に必ず終わらせること」だけ。** なぜそう決めたかは `decisions/`、
 やった記録は `log/`、仕様そのものは `requirements.md`。
 **このファイルは理由を持たない**(リンク先に任せる)。
@@ -24,9 +28,29 @@
       不要と判断した。未設定だとデフォルトで全世界配信のため EU にも配信されて
       しまい、申告義務のバナーが消えない。除外後に一覧で EU が外れていることを
       確認する
-- [ ] **月額の価格を決める**(要件9章)
+- [x] **月額の価格を決める** → **月額 $2.99** に確定(2026-09-08、要件9章)。
+      App Store Connect でサブスクを作るときにこの金額を入れる
 - [x] **課金ゲートを実装する** → 完了(`docs/plans/paywall-gate.md`)。
       第1章のみ無料、第2章以降は `premium` エンタイトルメントで解放
+- [ ] **アプリアイコンとスプラッシュを作る**
+      — `assets/expo.icon/`(`expo-symbol 2.svg` + 青のグラデーション)と
+      `app.json` の `splash-screen`(`#208AEF` / `splash-icon.png`)が
+      **Expo テンプレートの既定のまま**。環境構築の `a63fd16` から一度も触っていない。
+      プレースホルダのアイコンは審査で弾かれる。
+      スプラッシュ = 起動してから最初の画面が出るまでの1〜2秒に出る静止画面
+- [ ] **App Store Connect にサブスク商品を作る**
+      — RevenueCat 側には商品(`com.asakiita.learningkanji.premium.monthly`)と
+      `default` オファリング(`$rc_monthly`)が既にある。**ASC 側がまだ空**で、
+      RevenueCat の product が `duration: null` なのはその反映。月額 $2.99 で作る
+- [ ] **RevenueCat に本番の鍵を2つ設定する**
+      — iOS アプリ(`appb622056e1b`)が `app_store_connect_api_key_configured: false` /
+      `subscription_key_configured: false`。この2つが無いと本番のレシート検証と
+      サブスク状態の同期ができない。ASC で App Store Connect API キーと
+      In-App Purchase キーを発行して RevenueCat のアプリ設定に入れる
+- [ ] **ビルドと提出の経路を決めて、1回通す**
+      — `eas.json` が無く、`ios/` は gitignore(CNG)。**EAS Build と
+      `expo prebuild` + Xcode アーカイブのどちらでもよいが、決めていない。**
+      未知の待ち時間が一番多いのはここなので、提出物が揃う前に一度通しておく
 - [ ] **プライバシーポリシーの URL を用意する**
       — `src/app/paywall.tsx` の `PRIVACY_URL` が**まだ公開されていない URL を指している**。
       Apple は購入画面からプライバシーポリシーへ到達できることを求めるので、
@@ -70,9 +94,10 @@
       (`docs/plans/onboarding.md` 実装後の記録)
 - [ ] **TestFlight で少人数の外部テスト**(要件8章)。
       トロントの友人などターゲット層に触ってもらう。
-      **1日3字の上限があるため全50字の完走に約17日かかる。**
-      短縮するなら `DAILY_NEW_KANJI_LIMIT` を変えたビルドを別に配る
-      (`__DEV__` 限定のデバッグ設定は TestFlight に載らない。`docs/plans/srs-lessons.md`)
+      **完走は待たずに、審査提出と並行で回すと決めた(2026-09-08)。**
+      1日3字の上限があるため全50字の完走に約17日かかり、9/30 に間に合わない。
+      見てほしいのは**最初の数日の体験**(オンボーディング → 会話文 → 推測クイズ →
+      翌日の復習が戻ってくるところ)までで、第2章以降の通読は求めない
 
 ## 4. ストア掲載に要るもの
 
