@@ -8,7 +8,6 @@
     "scheme": "learningkanjimobileapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.asakiita.learningkanji",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -32,9 +31,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F4EDDD",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 200
         }
       ],
       "expo-sqlite"
