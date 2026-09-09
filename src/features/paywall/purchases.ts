@@ -6,9 +6,11 @@ import Purchases, {
   type PurchasesPackage,
 } from 'react-native-purchases';
 
-// Test Store公開キー(project: proj67324f83 / app: app952b72089c)。
-// App Store Connect登録後、本番のappl_...キーに差し替える。
-const REVENUECAT_IOS_API_KEY = 'test_kJIHcBOQPJHMqpkGFdcSAVRaTDd';
+// App Store の公開SDKキー(project: proj67324f83 / app: appb622056e1b)。
+// **公開キーなのでリポジトリに置いてよい。** SDKがクライアントに配る前提の値で、
+// .ipa から誰でも取り出せる。伏せても秘匿性は増えない。
+// 秘密APIキー(sk_...)と .p8 は別物で、こちらは絶対に置かない。
+const REVENUECAT_IOS_API_KEY = 'appl_REDLRYUUznEtbRGHBNyMTKlzlPP';
 
 let configured = false;
 

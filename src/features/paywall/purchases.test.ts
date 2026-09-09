@@ -50,14 +50,17 @@ describe('configurePurchases', () => {
     jest.clearAllMocks();
   });
 
-  it('configures the SDK with the Test Store API key', () => {
+  // キーの値そのものではなく接頭辞を見る。守りたいのは
+  // 「Test Store のキー(test_...)のまま提出しない」ことで、
+  // キーを差し替えるたびにテストが落ちるのは目的ではない。
+  it('configures the SDK with an App Store key, not a Test Store one', () => {
     const { configurePurchases } = loadModule();
 
     configurePurchases();
 
     expect(Purchases.configure).toHaveBeenCalledTimes(1);
     expect(Purchases.configure).toHaveBeenCalledWith({
-      apiKey: 'test_kJIHcBOQPJHMqpkGFdcSAVRaTDd',
+      apiKey: expect.stringMatching(/^appl_/),
     });
   });
 

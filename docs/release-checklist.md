@@ -16,10 +16,9 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 
 ## 1. これが無いと提出できない / 審査で落ちる
 
-- [ ] **RevenueCat の API キーを本番のものに差し替える**
-      — `src/features/paywall/purchases.ts` が `test_...`(Test Store)のまま。
-      **SDK 自身が「Test Store のキーで提出したアプリは審査で落ちる」と警告している**
-      (2026-09-03 に React Native DevTools で確認)。App Store Connect 登録後に `appl_...` へ
+- [x] **RevenueCat の API キーを本番のものに差し替える** → 完了(2026-09-09)。
+      `src/features/paywall/purchases.ts` を App Store アプリ(`appb622056e1b`)の
+      `appl_...` 公開キーに変更した
 - [x] **アプリ名を決める** → `Kanji Encounter` に確定。`app.json` の `name` を変更済み(#26)、
       App Store Connect にも App レコード作成済み(Bundle ID `com.asakiita.learningkanji`)
 - [ ] EU圏を配信対象から外す(2026-09-06 決定)。App Store Connect の
