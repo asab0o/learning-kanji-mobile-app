@@ -22,15 +22,23 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       (2026-09-03 に React Native DevTools で確認)。App Store Connect 登録後に `appl_...` へ
 - [x] **アプリ名を決める** → `Kanji Encounter` に確定。`app.json` の `name` を変更済み(#26)、
       App Store Connect にも App レコード作成済み(Bundle ID `com.asakiita.learningkanji`)
-- [ ] **EU圏と日本を配信対象から外す**(EU は 2026-09-06 決定、日本は 2026-09-09 決定)。
-      App Store Connect の Pricing and Availability → Availability で
-      **EU加盟国27カ国 + 日本**を除外する。未設定だとデフォルトで全世界配信になる。
-      - EU: Trader Status(DSA対応の申告)を不要にするため。未設定だと申告義務のバナーが消えない
-      - 日本: 特定商取引法の表示義務(氏名・住所・連絡先)を負わないため。理由と戻す条件は
-        `decisions/ADR-0009-exclude-japan-from-distribution.md`
+- [ ] **EU圏を配信対象から外す**(2026-09-06 決定)。App Store Connect の
+      Pricing and Availability → Availability で **EU加盟国27カ国**を除外する。
+      Trader Status(DSA対応の申告)を不要にするため。未設定だとデフォルトで全世界配信になり、
+      申告義務のバナーが消えない。**英国・スイス・ノルウェーは EU ではないので外さない**
+      (ASC の「Europe」トグルでまとめて選ぶと巻き込まれる)。
+      **日本は外さない**(`decisions/ADR-0009-sell-in-japan-with-tokushoho.md`)。
       - **サブスク商品側の Availability は全地域のままにする。** 除外リストを2箇所で持つと
         ズレるため、「どこで売るか」はアプリ側1箇所で決める
-      - 除外後に一覧で EU と日本が外れていることを確認する
+      - 除外後に一覧で EU が外れていること、英国が残っていることを確認する
+- [x] **特定商取引法に基づく表記を用意する** → 公開済み(2026-09-09)。
+      https://asab0o.github.io/learning-kanji-mobile-app/tokushoho/
+      住所・電話番号は「請求があれば遅滞なく開示」で省略。課金画面からリンク済み
+- [ ] **サブスクをアプリのバージョンと一緒に審査へ出す**
+      — **各種類の最初の自動更新サブスクは、新しいアプリバージョンと一緒に提出する必要がある**
+      (Apple のヘルプ)。サブスクの画面で「Add for Review」→ submission に
+      **アプリのバージョンとサブスクリプショングループを含める**。
+      **ここを忘れるとアプリだけ審査に出て、通ったのに購入できない状態になる**
 - [x] **月額の価格を決める** → **月額 $2.99** に確定(2026-09-08、要件9章)。
       App Store Connect でサブスクを作るときにこの金額を入れる
 - [x] **課金ゲートを実装する** → 完了(`docs/plans/paywall-gate.md`)。
