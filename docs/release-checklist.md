@@ -22,12 +22,15 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       (2026-09-03 に React Native DevTools で確認)。App Store Connect 登録後に `appl_...` へ
 - [x] **アプリ名を決める** → `Kanji Encounter` に確定。`app.json` の `name` を変更済み(#26)、
       App Store Connect にも App レコード作成済み(Bundle ID `com.asakiita.learningkanji`)
-- [ ] EU圏を配信対象から外す(2026-09-06 決定)。App Store Connect の
-      Pricing and Availability → Availability で EU加盟国27カ国を配信対象から
-      除外する。EUに配信しない前提のため、Trader Status(DSA対応の申告)は
-      不要と判断した。未設定だとデフォルトで全世界配信のため EU にも配信されて
-      しまい、申告義務のバナーが消えない。除外後に一覧で EU が外れていることを
-      確認する
+- [ ] **EU圏と日本を配信対象から外す**(EU は 2026-09-06 決定、日本は 2026-09-09 決定)。
+      App Store Connect の Pricing and Availability → Availability で
+      **EU加盟国27カ国 + 日本**を除外する。未設定だとデフォルトで全世界配信になる。
+      - EU: Trader Status(DSA対応の申告)を不要にするため。未設定だと申告義務のバナーが消えない
+      - 日本: 特定商取引法の表示義務(氏名・住所・連絡先)を負わないため。理由と戻す条件は
+        `decisions/ADR-0009-exclude-japan-from-distribution.md`
+      - **サブスク商品側の Availability は全地域のままにする。** 除外リストを2箇所で持つと
+        ズレるため、「どこで売るか」はアプリ側1箇所で決める
+      - 除外後に一覧で EU と日本が外れていることを確認する
 - [x] **月額の価格を決める** → **月額 $2.99** に確定(2026-09-08、要件9章)。
       App Store Connect でサブスクを作るときにこの金額を入れる
 - [x] **課金ゲートを実装する** → 完了(`docs/plans/paywall-gate.md`)。
