@@ -30,6 +30,7 @@ interface PaywallViewProps {
   onClose: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  onOpenLegalNotice: () => void;
 }
 
 export function PaywallView({
@@ -41,6 +42,7 @@ export function PaywallView({
   onClose,
   onOpenTerms,
   onOpenPrivacy,
+  onOpenLegalNotice,
 }: PaywallViewProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -142,6 +144,14 @@ export function PaywallView({
         <Pressable onPress={onOpenPrivacy} accessibilityRole="link" hitSlop={10}>
           <Text style={[styles.legal, { color: theme.textMuted }]}>Privacy Policy</Text>
         </Pressable>
+        <Text style={[styles.legal, { color: theme.border }]}>·</Text>
+        {/*
+          日本の特定商取引法に基づく表記。リンク先は日本語だが、**ラベルは英語にする**
+          (UI文言を英語で統一するのはこのプロジェクトの絶対規則)。
+        */}
+        <Pressable onPress={onOpenLegalNotice} accessibilityRole="link" hitSlop={10}>
+          <Text style={[styles.legal, { color: theme.textMuted }]}>Legal Notice (Japan)</Text>
+        </Pressable>
       </View>
 
       <Pressable onPress={onClose} disabled={busy} accessibilityRole="button" hitSlop={10}>
@@ -212,6 +222,8 @@ const styles = StyleSheet.create({
   legalRow: {
     flexDirection: 'row',
     justifyContent: 'center',
+    // 3本目のリンクが増えて、狭い端末では1行に収まらない。折り返させる。
+    flexWrap: 'wrap',
     gap: 10,
   },
   legal: {

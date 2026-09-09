@@ -28,7 +28,9 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       (ASC の「Europe」トグルでまとめて選ぶと巻き込まれる)。
       **日本は外さない**(`decisions/ADR-0009-sell-in-japan-with-tokushoho.md`)。
       - **サブスク商品側の Availability は全地域のままにする。** 除外リストを2箇所で持つと
-        ズレるため、「どこで売るか」はアプリ側1箇所で決める
+        ズレるため、「どこで売るか」はアプリ側1箇所で決める。
+        2026-09-09 に商品側が全地域 `true` であることを確認済み
+      - **アプリ側の Availability は API から読めない。** ASC の画面で見るしかない
       - 除外後に一覧で EU が外れていること、英国が残っていることを確認する
 - [x] **特定商取引法に基づく表記を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/tokushoho/
@@ -42,24 +44,26 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       App Store Connect でサブスクを作るときにこの金額を入れる
 - [x] **課金ゲートを実装する** → 完了(`docs/plans/paywall-gate.md`)。
       第1章のみ無料、第2章以降は `premium` エンタイトルメントで解放
-- [ ] **アプリアイコンとスプラッシュを作る**
-      — `assets/expo.icon/`(`expo-symbol 2.svg` + 青のグラデーション)と
-      `app.json` の `splash-screen`(`#208AEF` / `splash-icon.png`)が
-      **Expo テンプレートの既定のまま**。環境構築の `a63fd16` から一度も触っていない。
-      プレースホルダのアイコンは審査で弾かれる。
-      スプラッシュ = 起動してから最初の画面が出るまでの1〜2秒に出る静止画面
+- [x] **アプリアイコンとスプラッシュを作る** → 完了(2026-09-09、#34 / #35 / #37)。
+      アイコンは猫のソラ(`sora.png`)を加工せずそのまま、スプラッシュは絵から採った
+      `#F4EDDD` 背景 + 600px の `splash-icon.png`。テンプレの `assets/expo.icon/` と
+      `app.json` の `ios.icon` は削除済み
 - [x] **App Store Connect にサブスク商品を作る** → 作成済み(2026-09-09 に確認)。
       `kanji-premium-monthly` / グループ `premium-monthly` / ONE_MONTH / US $2.99。
       他地域の価格、表示名 "Full Access"、審査用スクリーンショットとメモ、
       グループの表示名 "Kanji Encounter" まで入っている。
-      **残るはプライバシーポリシー URL のみ**(上記)
+      プライバシーポリシー URL も入り、**2026-09-09 時点で `READY_TO_SUBMIT`**
+      (RevenueCat 経由で確認。`MISSING_METADATA` は解消済み)
 - [x] **RevenueCat に本番の鍵を2つ設定する** → 設定済み(2026-09-09)。
       `app_store_connect_api_key_configured` / `subscription_key_configured` とも true、
       Vendor Number も登録済み。これで RevenueCat から ASC の商品を直接読めるようになった
-- [ ] **ビルドと提出の経路を決めて、1回通す**
-      — `eas.json` が無く、`ios/` は gitignore(CNG)。**EAS Build と
-      `expo prebuild` + Xcode アーカイブのどちらでもよいが、決めていない。**
-      未知の待ち時間が一番多いのはここなので、提出物が揃う前に一度通しておく
+- [x] **ビルドと提出の経路を決めて、1回通す** → **EAS Build に確定**(2026-09-09)。
+      `eas.json` の `production` が store 配布、ビルド番号は EAS 側で自動採番。
+      キュー待ち込み6分45秒で .ipa まで出て、証明書とプロファイルも自動で通った。
+      `ios/` は gitignore のまま(CNG)。手元で `expo prebuild` するときは
+      `LANG=en_US.UTF-8` を付ける(無いと `pod install` が落ちる)
+- [ ] **アイコン差し替え後の .ipa を焼き直す**
+      — いま出ている .ipa は #34 時点のもので、アイコンがテンプレのまま
 - [x] **プライバシーポリシーの URL を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/privacy
       ページの実体は `gh-pages` ブランチ(`privacy/index.html`)。**main には無い。**
@@ -67,9 +71,9 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       履歴を共有しない別ブランチにした。`src/app/paywall.tsx` の `PRIVACY_URL` は
       元からこの URL を指していたので差し替え不要だった
 - [ ] **公開した URL を App Store Connect の2箇所に入れる**
-      — サブスク商品の Privacy Policy URL(RevenueCat 経由で見ると `privacy_policy_url: null`。
-      **これが埋まるまで商品は `MISSING_METADATA` のまま提出できない**)と、
-      App Information 側のアプリ本体の Privacy Policy URL
+      - [x] サブスク商品の Privacy Policy URL — 入力済み(2026-09-09 に RevenueCat 経由で確認)
+      - [ ] App Information 側のアプリ本体の Privacy Policy URL — **未確認**。
+            ここは API から読めないので ASC の画面で見る
 - [ ] **開発専用の画面を始末する**
       - [x] `src/app/paywall-debug.tsx` — 削除済み(`docs/plans/paywall-gate.md`)
       - `src/app/conversations.tsx` — `__DEV__` ガード済み。**残してよい**(削除不要)

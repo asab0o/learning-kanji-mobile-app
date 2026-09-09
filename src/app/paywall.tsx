@@ -25,12 +25,14 @@ import {
  */
 const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 
-/**
- * **プライバシーポリシーの URL はまだ用意できていない。**
- * リンク先が 404 のままだと審査で落ちる。公開作業は docs/release-checklist.md の管轄で、
- * 差し替えるのはこの定数1箇所だけ。
- */
 const PRIVACY_URL = 'https://asab0o.github.io/learning-kanji-mobile-app/privacy';
+
+/**
+ * 特定商取引法に基づく表記。**日本で課金を提供する以上、表示が要る**
+ * (根拠と、住所・電話番号を「請求があれば遅滞なく開示」に寄せた判断は
+ * docs/decisions/ADR-0009)。ページ本体は gh-pages ブランチにある。
+ */
+const TOKUSHOHO_URL = 'https://asab0o.github.io/learning-kanji-mobile-app/tokushoho/';
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -130,6 +132,7 @@ export default function PaywallScreen() {
       onClose={back}
       onOpenTerms={() => void WebBrowser.openBrowserAsync(TERMS_URL)}
       onOpenPrivacy={() => void WebBrowser.openBrowserAsync(PRIVACY_URL)}
+      onOpenLegalNotice={() => void WebBrowser.openBrowserAsync(TOKUSHOHO_URL)}
     />
   );
 }
