@@ -38,23 +38,28 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       **Expo テンプレートの既定のまま**。環境構築の `a63fd16` から一度も触っていない。
       プレースホルダのアイコンは審査で弾かれる。
       スプラッシュ = 起動してから最初の画面が出るまでの1〜2秒に出る静止画面
-- [ ] **App Store Connect にサブスク商品を作る**
-      — RevenueCat 側には商品(`com.asakiita.learningkanji.premium.monthly`)と
-      `default` オファリング(`$rc_monthly`)が既にある。**ASC 側がまだ空**で、
-      RevenueCat の product が `duration: null` なのはその反映。月額 $2.99 で作る
-- [ ] **RevenueCat に本番の鍵を2つ設定する**
-      — iOS アプリ(`appb622056e1b`)が `app_store_connect_api_key_configured: false` /
-      `subscription_key_configured: false`。この2つが無いと本番のレシート検証と
-      サブスク状態の同期ができない。ASC で App Store Connect API キーと
-      In-App Purchase キーを発行して RevenueCat のアプリ設定に入れる
+- [x] **App Store Connect にサブスク商品を作る** → 作成済み(2026-09-09 に確認)。
+      `kanji-premium-monthly` / グループ `premium-monthly` / ONE_MONTH / US $2.99。
+      他地域の価格、表示名 "Full Access"、審査用スクリーンショットとメモ、
+      グループの表示名 "Kanji Encounter" まで入っている。
+      **残るはプライバシーポリシー URL のみ**(上記)
+- [x] **RevenueCat に本番の鍵を2つ設定する** → 設定済み(2026-09-09)。
+      `app_store_connect_api_key_configured` / `subscription_key_configured` とも true、
+      Vendor Number も登録済み。これで RevenueCat から ASC の商品を直接読めるようになった
 - [ ] **ビルドと提出の経路を決めて、1回通す**
       — `eas.json` が無く、`ios/` は gitignore(CNG)。**EAS Build と
       `expo prebuild` + Xcode アーカイブのどちらでもよいが、決めていない。**
       未知の待ち時間が一番多いのはここなので、提出物が揃う前に一度通しておく
-- [ ] **プライバシーポリシーの URL を用意する**
-      — `src/app/paywall.tsx` の `PRIVACY_URL` が**まだ公開されていない URL を指している**。
-      Apple は購入画面からプライバシーポリシーへ到達できることを求めるので、
-      404 のまま提出すると落ちる。公開したら定数1箇所を差し替える
+- [x] **プライバシーポリシーの URL を用意する** → 公開済み(2026-09-09)。
+      https://asab0o.github.io/learning-kanji-mobile-app/privacy
+      ページの実体は `gh-pages` ブランチ(`privacy/index.html`)。**main には無い。**
+      `docs/` から配信すると内部ドキュメント一式がそのままサイトになるため、
+      履歴を共有しない別ブランチにした。`src/app/paywall.tsx` の `PRIVACY_URL` は
+      元からこの URL を指していたので差し替え不要だった
+- [ ] **公開した URL を App Store Connect の2箇所に入れる**
+      — サブスク商品の Privacy Policy URL(RevenueCat 経由で見ると `privacy_policy_url: null`。
+      **これが埋まるまで商品は `MISSING_METADATA` のまま提出できない**)と、
+      App Information 側のアプリ本体の Privacy Policy URL
 - [ ] **開発専用の画面を始末する**
       - [x] `src/app/paywall-debug.tsx` — 削除済み(`docs/plans/paywall-gate.md`)
       - `src/app/conversations.tsx` — `__DEV__` ガード済み。**残してよい**(削除不要)
