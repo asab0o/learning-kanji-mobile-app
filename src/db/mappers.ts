@@ -260,7 +260,8 @@ function isLineSegment(value: unknown): value is LineSegment {
   }
   return (
     typeof value.text === 'string' &&
-    (value.reading === undefined || typeof value.reading === 'string')
+    (value.reading === undefined || typeof value.reading === 'string') &&
+    (value.breakAfter === undefined || typeof value.breakAfter === 'boolean')
   );
 }
 

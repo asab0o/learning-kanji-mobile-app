@@ -1,4 +1,4 @@
-import { segmentsToKana, segmentsToText } from '@/content/segments';
+import { segmentsToKana, segmentsToText, startsWithForbiddenLineStart } from '@/content/segments';
 import type { LineSegment } from '@/content/types';
 
 describe('segmentsToText', () => {
@@ -62,5 +62,31 @@ describe('segmentsToKana', () => {
 
   it('空配列なら空文字列', () => {
     expect(segmentsToKana([])).toBe('');
+  });
+});
+
+describe('startsWithForbiddenLineStart', () => {
+  it.each(['、ここでは', '。', '」は、', '」、ここでは', '）と', '？', '！', '…同じ字'])(
+    '%s は行頭に来てはいけない',
+    (text) => {
+      expect(startsWithForbiddenLineStart(text)).toBe(true);
+    }
+  );
+
+  it.each(['きれいですね。', '「みず」ですよね？', '今日', 'もらえますか？', 'あいだ'])(
+    '%s は行頭に来てよい',
+    (text) => {
+      expect(startsWithForbiddenLineStart(text)).toBe(false);
+    }
+  );
+
+  it('長音符と小書きかなで始まるセグメントも行頭に来てはいけない', () => {
+    expect(startsWithForbiddenLineStart('ーん')).toBe(true);
+    expect(startsWithForbiddenLineStart('っと')).toBe(true);
+    expect(startsWithForbiddenLineStart('ょっと')).toBe(true);
+  });
+
+  it('空文字列は false', () => {
+    expect(startsWithForbiddenLineStart('')).toBe(false);
   });
 });

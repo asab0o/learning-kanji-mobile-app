@@ -13,7 +13,7 @@
  */
 
 import { ALLOWED_IN_ROMAJI } from './romaji';
-import { segmentsToText } from './segments';
+import { segmentsToText, startsWithForbiddenLineStart } from './segments';
 import type { ChapterNumber, ContentSet, KanjiEntry, Line, Sentence } from './types';
 
 export type IssueLevel = 'error' | 'warning';
@@ -525,6 +525,47 @@ function checkOneLineSegments(
  * 空(猫)の発話ルール。
  * 決定事項 3章: 要求・状態・存在のみを言い、挨拶や応答はしない。
  */
+/**
+ * 強制改行(`LineSegment.breakAfter`)の指定が効く形になっているか
+ * (docs/plans/line-break-control.md)。
+ *
+ * どちらも表示は壊れないので warning。**指定した本人が「効いていない」ことに
+ * 気づけない**のが問題で、機械が言うほうが早い。
+ */
+export function checkLineBreaks({ sentences }: ContentSet): Issue[] {
+  const issues: Issue[] = [];
+
+  for (const s of sentences) {
+    s.lines.forEach((line, i) => {
+      const at = `${where(s)} の ${i + 1} 行目`;
+      line.segments.forEach((segment, index) => {
+        if (segment.breakAfter !== true) return;
+
+        if (index === line.segments.length - 1) {
+          issues.push(
+            warn(
+              'line-breaks',
+              `${at}: 最後のセグメント "${segment.text}" の breakAfter は効きません(後ろに改行する行が無い)`
+            )
+          );
+          return;
+        }
+
+        const next = line.segments[index + 1];
+        if (startsWithForbiddenLineStart(next.text)) {
+          issues.push(
+            warn(
+              'line-breaks',
+              `${at}: "${segment.text}" の後ろで改行すると、次の行が "${[...next.text][0]}" で始まります(行頭に置けない字)`
+            )
+          );
+        }
+      });
+    });
+  }
+  return issues;
+}
+
 export function checkSoraSpeechRule({ sentences }: ContentSet): Issue[] {
   const issues: Issue[] = [];
   for (const s of sentences) {
@@ -959,6 +1000,7 @@ const RULES = [
   checkReencounterLineCleanliness,
   checkCompoundPartnerTaught,
   checkSoraInteraction,
+  checkLineBreaks,
 ] satisfies ((content: ContentSet) => Issue[])[];
 
 export function validateContent(content: ContentSet): Issue[] {

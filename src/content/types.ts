@@ -88,6 +88,18 @@ export interface LineSegment {
   text: string;
   /** text 全体に乗る読み。かなだけのセグメントでは省略する */
   reading?: string;
+  /**
+   * このセグメントの後ろで**必ず改行する**という作者の指定
+   * (docs/plans/line-break-control.md)。
+   *
+   * 折り返しは本来セグメント境界のどこで起きるか分からず、位置は吹き出しの幅で決まる。
+   * 「ここで切りたい」が読みやすさを左右する行だけ、これで明示する。
+   *
+   * **表示のための指定であり、`japanese` との連結一致には影響しない**
+   * (`segmentsToText` / `segmentsToKana` は `text` / `reading` しか見ない)。
+   * **最後のセグメントに付けても効果が無い**(`checkLineBreaks` が warning で拾う)。
+   */
+  breakAfter?: boolean;
 }
 
 export interface Line {
