@@ -62,8 +62,9 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       キュー待ち込み6分45秒で .ipa まで出て、証明書とプロファイルも自動で通った。
       `ios/` は gitignore のまま(CNG)。手元で `expo prebuild` するときは
       `LANG=en_US.UTF-8` を付ける(無いと `pod install` が落ちる)
-- [ ] **アイコン差し替え後の .ipa を焼き直す**
-      — いま出ている .ipa は #34 時点のもので、アイコンがテンプレのまま
+- [x] **アイコン差し替え後の .ipa を焼き直す** → 完了(2026-09-10)。
+      EAS build #2 / `05be9a3`(#41 マージ後の main)。build #1 は `fedeb6c` の
+      アイコン差し替え前だった。**まだ TestFlight には上げていない**(`eas submit`)
 - [x] **プライバシーポリシーの URL を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/privacy
       ページの実体は `gh-pages` ブランチ(`privacy/index.html`)。**main には無い。**
@@ -74,6 +75,10 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       - [x] サブスク商品の Privacy Policy URL — 入力済み(2026-09-09 に RevenueCat 経由で確認)
       - [ ] App Information 側のアプリ本体の Privacy Policy URL — **未確認**。
             ここは API から読めないので ASC の画面で見る
+- [ ] **Paid Applications Agreement が有効か確認する**
+      — ASC の Business → Agreements。**これが未締結だと、どの環境でも
+      StoreKit から商品を引けない**(offerings が空になる)。
+      シミュレータで offerings が引けなかったときの候補の1つとして未確認のまま
 - [ ] **開発専用の画面を始末する**
       - [x] `src/app/paywall-debug.tsx` — 削除済み(`docs/plans/paywall-gate.md`)
       - `src/app/conversations.tsx` — `__DEV__` ガード済み。**残してよい**(削除不要)
@@ -103,14 +108,20 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 - [ ] **リリースビルド(`__DEV__` が false)で開発用のものが出ないこと**
       - 入口画面の `Ignore daily limit` トグル
       - `learningkanjimobileapp://conversations`(開発用一覧)
+      - `learningkanjimobileapp://kanji-list`(同上。**書き漏れていた3つ目のルート**)
       - イラスト未投入のプレースホルダに出る鍵名
-- [ ] **旧ビルドを消さずに更新して、オンボーディングが1回だけ出ること**
-      — `onboarding_completed` は後から足した列で既定 false のため、学習途中の端末にも
-      1回だけ出る(仕様として許容)。**確かめるのは「1回で終わること」と
-      「学習済みの進捗・復習の期日・樹の葉が1つも変わらないこと」**。
-      マイグレーション(`0004`)は `ALTER TABLE ADD COLUMN` の1文で既存行に触れない
-      ことをコード上は確認済みだが、旧ビルドからの移行は実機で見ていない
-      (`docs/plans/onboarding.md` 実装後の記録)
+- [x] **旧ビルドを消さずに更新して、オンボーディングが1回だけ出ること**
+      → シミュレータで検証済み(2026-09-10)。`62f9262`(0004 導入前)の JS で
+      DB を作り、漢字2字を学習してから main の JS に差し替えた。
+      マイグレーションは4本→5本、`onboarding_completed` が既定 false で追加され、
+      `user_settings` の既存行は `updated_at` まで無変更。`lesson_events` /
+      `quiz_attempts` も一致。オンボーディングは1回出て、再起動では出ない。
+      **実機の TestFlight 更新では未確認**(JS の差し替えで再現したため、
+      アプリ本体の入れ替えは経由していない)
+- [ ] **TestFlight で購入が通ること**。**シミュレータでは確認できない**
+      (`Error fetching offerings` / 「None of the products ... could be fetched」。
+      RevenueCat 側の設定は確認済み: `default` offering が current、`$rc_monthly` に
+      App Store の商品が紐付いている)。課金画面 → 購入 → 第2章が開く → Restore まで見る
 - [ ] **TestFlight で少人数の外部テスト**(要件8章)。
       トロントの友人などターゲット層に触ってもらう。
       **完走は待たずに、審査提出と並行で回すと決めた(2026-09-08)。**
