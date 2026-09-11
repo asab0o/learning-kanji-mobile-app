@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     //
     // **既知の制約**: **幅で自然に折り返した**2行目のセグメントに★が来ると直上の行に重なる
     // (styles.row に rowGap が無く、折り返し位置は JS から見えないため)。
-    // `breakAfter` で明示的に分けた行は描画側が marginTop で隙間を空けて救う。
+    // `breakAfter` で明示的に分けた行は、行と行の間に挟むスペーサの高さで隙間を空けて救う。
     // 演出語を折り返しで分断しないことは執筆側の制約に残る(docs/content-spec.md「演出行の書き方」)。
     left: 0,
     right: 0,

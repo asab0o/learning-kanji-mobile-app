@@ -522,10 +522,6 @@ function checkOneLineSegments(
 }
 
 /**
- * 空(猫)の発話ルール。
- * 決定事項 3章: 要求・状態・存在のみを言い、挨拶や応答はしない。
- */
-/**
  * 強制改行(`LineSegment.breakAfter`)の指定が効く形になっているか
  * (docs/plans/line-break-control.md)。
  *
@@ -566,6 +562,10 @@ export function checkLineBreaks({ sentences }: ContentSet): Issue[] {
   return issues;
 }
 
+/**
+ * 空(猫)の発話ルール。
+ * 決定事項 3章: 要求・状態・存在のみを言い、挨拶や応答はしない。
+ */
 export function checkSoraSpeechRule({ sentences }: ContentSet): Issue[] {
   const issues: Issue[] = [];
   for (const s of sentences) {

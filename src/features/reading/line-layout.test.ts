@@ -30,13 +30,42 @@ describe('toLayoutLines', () => {
     expect(shape(segments)).toEqual([['水', '曜', '日」、ここでは']]);
   });
 
-  it('読点・句点・疑問符で始まるセグメントも直前と同じ塊に入る', () => {
+  it('読点・疑問符で始まるセグメントも直前と同じ塊に入る', () => {
     expect(shape([{ text: 'この' }, { text: '字', reading: 'じ' }, { text: '、' }])).toEqual([
       ['この', '字、'],
     ]);
     expect(shape([{ text: 'おかえり' }, { text: 'は' }, { text: '？' }])).toEqual([
       ['おかえり', 'は？'],
     ]);
+  });
+
+  it('句点で始まるセグメントも直前と同じ塊に入る', () => {
+    expect(shape([{ text: 'ねむい' }, { text: '。' }])).toEqual([['ねむい。']]);
+  });
+
+  it('禁則文字で始まるセグメントが続くと、3つ以上でも1つの塊になる', () => {
+    expect(shape([{ text: 'あ' }, { text: '」' }, { text: '、' }, { text: 'つぎ' }])).toEqual([
+      ['あ」、', 'つぎ'],
+    ]);
+  });
+
+  it('ちょうど8字なら連結し、9字になるなら連結しない(上限の境界)', () => {
+    // 4字 + 4字 = 8字 → 連結する
+    expect(shape([{ text: 'あいうえ' }, { text: '」かきく' }])).toEqual([['あいうえ」かきく']]);
+    // 4字 + 5字 = 9字 → 連結しない
+    expect(shape([{ text: 'あいうえ' }, { text: '」かきくけ' }])).toEqual([
+      ['あいうえ', '」かきくけ'],
+    ]);
+  });
+
+  it('禁則で連結されたセグメント自身の breakAfter は、塊ごと行を閉じる', () => {
+    const segments: FuriganaSegment[] = [
+      { text: '水', reading: 'すい' },
+      { text: '」、', breakAfter: true },
+      { text: 'つぎの' },
+    ];
+
+    expect(shape(segments)).toEqual([['水」、'], ['つぎの']]);
   });
 
   it('連結すると8字を超える場合は連結しない(塊が吹き出しからはみ出すため)', () => {
