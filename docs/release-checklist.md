@@ -62,9 +62,11 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       キュー待ち込み6分45秒で .ipa まで出て、証明書とプロファイルも自動で通った。
       `ios/` は gitignore のまま(CNG)。手元で `expo prebuild` するときは
       `LANG=en_US.UTF-8` を付ける(無いと `pod install` が落ちる)
-- [x] **アイコン差し替え後の .ipa を焼き直す** → 完了(2026-09-10)。
-      EAS build #2 / `05be9a3`(#41 マージ後の main)。build #1 は `fedeb6c` の
-      アイコン差し替え前だった。**まだ TestFlight には上げていない**(`eas submit`)
+- [x] **.ipa を焼いて TestFlight に上げる** → 完了(2026-09-12)。
+      **build#3 / `f83d5bf`**(#44 マージ後の main)。外の絵(#43)と改行(#44)が入っている。
+      `eas submit` でアップロード済み、Apple の処理待ち。
+      build#1 は `fedeb6c` でアイコン差し替え前、build#2 は `05be9a3` で #43 / #44 の前だった。
+      **焼き直しが要るのは、コンテンツかアセットを変えたとき**(どちらもバイナリに焼き込まれる)
 - [x] **プライバシーポリシーの URL を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/privacy
       ページの実体は `gh-pages` ブランチ(`privacy/index.html`)。**main には無い。**
@@ -122,6 +124,10 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       (`Error fetching offerings` / 「None of the products ... could be fetched」。
       RevenueCat 側の設定は確認済み: `default` offering が current、`$rc_monthly` に
       App Store の商品が紐付いている)。課金画面 → 購入 → 第2章が開く → Restore まで見る
+- [ ] **外部テストは Beta App Review を通す必要がある。**
+      社内テスター(ASC のユーザー)は審査なしで即配れるが、**トロントの友人のような外部テスターは
+      Beta App Review(通常1日程度)を通らないと招待できない**。審査提出と並行で回すなら、
+      **提出より先に外部テストの申請を出す**ほうが早い
 - [ ] **TestFlight で少人数の外部テスト**(要件8章)。
       トロントの友人などターゲット層に触ってもらう。
       **完走は待たずに、審査提出と並行で回すと決めた(2026-09-08)。**
