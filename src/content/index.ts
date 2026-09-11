@@ -2112,7 +2112,7 @@ export const sentences: Sentence[] = [
         segments: [
           { text: 'あたしと' },
           { text: '空', reading: 'そら' },
-          { text: 'がいるから、あなたで' },
+          { text: 'がいるから、あなたで', breakAfter: true },
           { text: '三', reading: 'さん' },
           { text: '人', reading: 'にん' },
           { text: 'だねえ。' },
@@ -2161,7 +2161,7 @@ export const sentences: Sentence[] = [
         japanese: 'すみません、かばんが大きくて…',
         segments: [
           { text: 'すみません、' },
-          { text: 'かばんが' },
+          { text: 'かばんが', breakAfter: true },
           { text: '大', reading: 'おお' },
           { text: 'きくて…' },
         ],
@@ -4469,7 +4469,8 @@ export const sentences: Sentence[] = [
           { text: 'ものは、' },
           { text: '気', reading: 'き' },
           { text: '持', reading: 'も' },
-          { text: 'ちがいいよ。' },
+          { text: 'ちが', breakAfter: true },
+          { text: 'いいよ。' },
         ],
         romaji: 'Ii nē. Atarashii mono wa, kimochi ga ii yo.',
         english: 'Nice. New things feel good.',
