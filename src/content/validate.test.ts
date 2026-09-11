@@ -2,6 +2,7 @@ import {
   checkChapterComposition,
   checkCompoundPartnerTaught,
   checkFreeChapterBoundary,
+  checkLineBreaks,
   checkLineSegments,
   checkRomaji,
   checkNewKanjiPerSentence,
@@ -724,6 +725,73 @@ describe('checkLineSegments', () => {
 });
 
 // --- 構造 -----------------------------------------------------------------
+
+describe('checkLineBreaks', () => {
+  it('途中のセグメントに付いた breakAfter は指摘しない', () => {
+    const issues = checkLineBreaks(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [
+              line('これは、少し高いですね。', 'mia', [
+                { text: 'これは、' },
+                { text: '少', reading: 'すこ' },
+                { text: 'し', breakAfter: true },
+                { text: '高', reading: 'たか' },
+                { text: 'いですね。' },
+              ]),
+            ],
+          }),
+        ],
+      })
+    );
+    expect(issues).toEqual([]);
+  });
+
+  it('最後のセグメントの breakAfter は効かないので warning', () => {
+    const issues = checkLineBreaks(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [
+              line('ねむい。', 'sora', [{ text: 'ねむい。', breakAfter: true }]),
+            ],
+          }),
+        ],
+      })
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0].level).toBe('warning');
+    expect(issues[0].rule).toBe('line-breaks');
+    expect(issues[0].message).toContain('効きません');
+  });
+
+  it('breakAfter の直後が行頭に置けない字で始まるなら warning', () => {
+    const issues = checkLineBreaks(
+      content({
+        sentences: [
+          sentence({
+            id: 's1',
+            order: 1,
+            lines: [
+              line('おしいねえ。、ここでは', 'grandma', [
+                { text: 'おしいねえ。', breakAfter: true },
+                { text: '、ここでは' },
+              ]),
+            ],
+          }),
+        ],
+      })
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0].level).toBe('warning');
+    expect(issues[0].message).toContain('行頭に置けない字');
+  });
+});
 
 describe('checkNewKanjiPerSentence', () => {
   it('再登場のない特別回は落ちる', () => {

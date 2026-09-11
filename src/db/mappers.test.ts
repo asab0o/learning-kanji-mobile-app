@@ -208,6 +208,20 @@ describe('toLine', () => {
     expect(line.segments).toEqual([{ text: '歩', reading: 'ある' }, { text: 'く' }]);
   });
 
+  it('breakAfter を往復させる(強制改行の指定が DB を通っても消えない)', () => {
+    const line = toLine(
+      lineRow({ segments: '[{"text":"おしいねえ。","breakAfter":true},{"text":"「"}]' })
+    );
+
+    expect(line.segments).toEqual([{ text: 'おしいねえ。', breakAfter: true }, { text: '「' }]);
+  });
+
+  it('breakAfter が真偽値でなければ落ちる', () => {
+    expect(() => toLine(lineRow({ segments: '[{"text":"歩","breakAfter":"yes"}]' }))).toThrow(
+      /segments\[0\]/
+    );
+  });
+
   it('segments が壊れた JSON なら行 ID と列名を含むエラーで落ちる', () => {
     expect(() => toLine(lineRow({ segments: '{' }))).toThrow(/segments/);
     expect(() => toLine(lineRow({ segments: '{' }))).toThrow(/01J0000000000000000000LIN0/);
