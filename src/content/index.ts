@@ -698,9 +698,7 @@ export const kanji: KanjiEntry[] = [
     illustrationKey: 'book',
     // 例外字。訓読み(もと)がほぼ使われないため音読みで導入する(天・語と同じ)。
     // 第2段階の対象にもしない(docs/対象漢字リスト.md「本」の特記)
-    readings: [
-      { kana: 'ほん', romaji: 'hon', type: 'on' },
-    ],
+    readings: [{ kana: 'ほん', romaji: 'hon', type: 'on' }],
     readingIntroduction: 'on-only',
   },
   {
@@ -737,9 +735,7 @@ export const kanji: KanjiEntry[] = [
     chapter: 4,
     illustrationKey: 'language',
     // 例外字。訓読み(かた-る)より音読みでの使用が圧倒的
-    readings: [
-      { kana: 'ご', romaji: 'go', type: 'on' },
-    ],
+    readings: [{ kana: 'ご', romaji: 'go', type: 'on' }],
     readingIntroduction: 'on-only',
   },
   {
@@ -2212,7 +2208,7 @@ export const sentences: Sentence[] = [
         segments: [
           { text: 'まだ' },
           { text: '子猫', reading: 'こねこ' },
-          { text: 'だからねえ。' },
+          { text: 'だからねえ。', breakAfter: true },
           { text: '小', reading: 'ちい' },
           { text: 'さいけど、よく' },
           { text: '食', reading: 'た' },
@@ -2248,7 +2244,7 @@ export const sentences: Sentence[] = [
         speaker: 'grandma',
         japanese: 'そうだねえ。こういう日は、ふとんを干そうかね。',
         segments: [
-          { text: 'そうだねえ。' },
+          { text: 'そうだねえ。', breakAfter: true },
           { text: 'こういう' },
           { text: '日', reading: 'ひ' },
           { text: 'は、ふとんを', breakAfter: true },
@@ -2279,7 +2275,11 @@ export const sentences: Sentence[] = [
       {
         speaker: 'mia',
         japanese: 'え、さっきも食べたよね？',
-        segments: [{ text: 'え、さっきも' }, { text: '食', reading: 'た' }, { text: 'べたよね？' }],
+        segments: [
+          { text: 'え、さっきも', breakAfter: true },
+          { text: '食', reading: 'た' },
+          { text: 'べたよね？' },
+        ],
         romaji: 'E, sakki mo tabeta yo ne?',
         english: "Huh? You just ate, didn't you?",
       },
@@ -2602,7 +2602,8 @@ export const sentences: Sentence[] = [
         segments: [
           { text: 'あの' },
           { text: '子', reading: 'こ' },
-          { text: 'たちは、あたしより' },
+          { text: 'たちは、', breakAfter: true },
+          { text: 'あたしより' },
           { text: '早', reading: 'はや' },
           { text: 'いからねえ。' },
         ],
@@ -3020,7 +3021,7 @@ export const sentences: Sentence[] = [
         segments: [
           { text: 'よく' },
           { text: '気', reading: 'き' },
-          { text: 'づいたねえ。' },
+          { text: 'づいたねえ。', breakAfter: true },
           { text: '形', reading: 'かたち' },
           { text: 'はちがうけど、' },
           { text: 'どっちも「ひ」だよ。' },
@@ -3239,7 +3240,7 @@ export const sentences: Sentence[] = [
         segments: [
           { text: 'おばあちゃん、' },
           { text: '少', reading: 'すこ' },
-          { text: 'し' },
+          { text: 'し', breakAfter: true },
           { text: '話', reading: 'はな' },
           { text: 'してもいいですか？' },
         ],
@@ -3252,7 +3253,7 @@ export const sentences: Sentence[] = [
         segments: [
           { text: 'いいよ。' },
           { text: '何', reading: 'なん' },
-          { text: 'でも' },
+          { text: 'でも', breakAfter: true },
           { text: '話', reading: 'はな' },
           { text: 'しなさい。' },
         ],
@@ -4283,11 +4284,7 @@ export const sentences: Sentence[] = [
       {
         speaker: 'mia',
         japanese: '「いきる」が「せい」になるんですね。',
-        segments: [
-          { text: '「いきる」が' },
-          { text: '「せい」に' },
-          { text: 'なるんですね。' },
-        ],
+        segments: [{ text: '「いきる」が' }, { text: '「せい」に' }, { text: 'なるんですね。' }],
         romaji: '"Ikiru" ga "sei" ni naru n desu ne.',
         english: "So 'ikiru' becomes 'sei'.",
       },
@@ -4611,11 +4608,7 @@ export const sentences: Sentence[] = [
       {
         speaker: 'mia',
         japanese: '「そと」と「くに」で、「がいこく」……。',
-        segments: [
-          { text: '「そと」と' },
-          { text: '「くに」で、' },
-          { text: '「がいこく」……。' },
-        ],
+        segments: [{ text: '「そと」と' }, { text: '「くに」で、' }, { text: '「がいこく」……。' }],
         romaji: '"Soto" to "kuni" de, "gaikoku"...',
         english: "'Soto' and 'kuni' make 'gaikoku'...",
       },
@@ -4693,11 +4686,7 @@ export const sentences: Sentence[] = [
       {
         speaker: 'mia',
         japanese: 'こっちは安いです。',
-        segments: [
-          { text: 'こっちは' },
-          { text: '安', reading: 'やす' },
-          { text: 'いです。' },
-        ],
+        segments: [{ text: 'こっちは' }, { text: '安', reading: 'やす' }, { text: 'いです。' }],
         romaji: 'Kotchi wa yasui desu.',
         english: 'This one is cheap.',
       },
