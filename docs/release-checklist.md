@@ -146,8 +146,20 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 
 ## 4. ストア掲載に要るもの
 
-- [ ] **差別化ポイントの一言でのコピー化**(エレベーターピッチ。要件9章)
-- [ ] スクリーンショット / 説明文 / プライバシー情報
+- [x] **差別化ポイントの一言でのコピー化**(エレベーターピッチ。要件9章)
+      → `docs/store-listing.md` に確定(2026-09-12)
+- [x] **Support URL を用意する** → 公開済み(2026-09-12)。
+      https://asab0o.github.io/learning-kanji-mobile-app/support/
+      **App Information の必須項目**で、リンク切れや無関係なページは差し戻しの常連。
+      連絡先と想定質問6つ(1日3字の上限 / 復習の時期 / 読みが変わる件 / 進捗の保存先 /
+      解約方法 / 買ったのに開かないとき)を置いた
+- [x] **スクリーンショット / 説明文 / サブタイトル / キーワード** → `docs/store-listing.md` に確定。
+      スクショは5枚を 1320×2868 で書き出し済み(装飾版)。**まだ ASC には入れていない**
+- [ ] **上記を ASC に入れる**(Subtitle / Promotional Text / Keywords / Description /
+      Support URL / スクリーンショット5枚)
+- [ ] **App Privacy の質問票に答える**(データ収集の申告。サーバーを持たず、
+      通信は RevenueCat の購入時のみ)
+- [ ] **年齢レーティングの質問に答える**
 
 ---
 
