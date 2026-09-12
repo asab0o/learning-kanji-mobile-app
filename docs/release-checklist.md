@@ -21,7 +21,8 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       `appl_...` 公開キーに変更した
 - [x] **アプリ名を決める** → `Kanji Encounter` に確定。`app.json` の `name` を変更済み(#26)、
       App Store Connect にも App レコード作成済み(Bundle ID `com.asakiita.learningkanji`)
-- [ ] **EU圏を配信対象から外す**(2026-09-06 決定)。App Store Connect の
+- [x] **EU圏を配信対象から外す** → 完了(2026-09-12)。**`Europe` が 42 → 15 になり、EU加盟国27が外れた。**
+      英国・スイス・ノルウェー・アイスランドは残っている。以下は当時の手順(2026-09-06 決定)。App Store Connect の
       Pricing and Availability → Availability で **EU加盟国27カ国**を除外する。
       Trader Status(DSA対応の申告)を不要にするため。未設定だとデフォルトで全世界配信になり、
       申告義務のバナーが消えない。**英国・スイス・ノルウェーは EU ではないので外さない**
@@ -32,6 +33,11 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
         2026-09-09 に商品側が全地域 `true` であることを確認済み
       - **アプリ側の Availability は API から読めない。** ASC の画面で見るしかない
       - 除外後に一覧で EU が外れていること、英国が残っていることを確認する
+      - **除外しても DSA の trader 申告バナーは消えなかった**(2026-09-12 実測)。
+        文面は「EU で配信するなら申告が必要」という条件つきで、アカウント単位で出ているらしい。
+        **配信対象から外れている以上ブロックにはならないはず**と判断し、申告せずに進める。
+        提出時に実際に止められたら、そのときのエラー文言で判断する。
+        **trader と申告すると住所・電話番号が EU の掲載ページに公開される**(ADR-0009 が避けた当のもの)
 - [x] **特定商取引法に基づく表記を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/tokushoho/
       住所・電話番号は「請求があれば遅滞なく開示」で省略。課金画面からリンク済み
@@ -73,14 +79,17 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       `docs/` から配信すると内部ドキュメント一式がそのままサイトになるため、
       履歴を共有しない別ブランチにした。`src/app/paywall.tsx` の `PRIVACY_URL` は
       元からこの URL を指していたので差し替え不要だった
-- [ ] **公開した URL を App Store Connect の2箇所に入れる**
+- [x] **公開した URL を App Store Connect の2箇所に入れる** → 完了
       - [x] サブスク商品の Privacy Policy URL — 入力済み(2026-09-09 に RevenueCat 経由で確認)
-      - [ ] App Information 側のアプリ本体の Privacy Policy URL — **未確認**。
-            ここは API から読めないので ASC の画面で見る
-- [ ] **Paid Applications Agreement が有効か確認する**
-      — ASC の Business → Agreements。**これが未締結だと、どの環境でも
-      StoreKit から商品を引けない**(offerings が空になる)。
-      シミュレータで offerings が引けなかったときの候補の1つとして未確認のまま
+      - [x] App Information 側のアプリ本体の Privacy Policy URL — 設定済み(2026-09-12 に画面で確認)
+- [ ] **Paid Apps Agreement を `Active` にする**(ASC の現行名は `Paid Apps Agreement`)
+      — Business → Agreements。**未締結だと、どの環境でも StoreKit から商品を引けない**
+      (offerings が空になる)。シミュレータで offerings が引けなかった原因の本命だった。
+      **2026-09-12 時点: `New` → 規約に同意して `Pending User Info` へ。**
+      銀行口座は `Active`、税務フォーム(U.S. Certificate of Foreign Status / W-8BEN)も提出済み。
+      **残るは Status が `Active` に変わるのを確認するだけ。**
+      - 税務フォームは **W-8BEN で日米租税条約の第12条・0%** を申告した
+        (申告しないと米国売上から30%源泉徴収される)。Foreign TIN はマイナンバー
 - [ ] **開発専用の画面を始末する**
       - [x] `src/app/paywall-debug.tsx` — 削除済み(`docs/plans/paywall-gate.md`)
       - `src/app/conversations.tsx` — `__DEV__` ガード済み。**残してよい**(削除不要)
