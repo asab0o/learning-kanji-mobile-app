@@ -120,6 +120,25 @@ export function advanceReviewSession({
   };
 }
 
+/**
+ * 出題中の字が、不正解で末尾から戻ってきた出し直しか。画面の `Try again` に使う。
+ *
+ * **答え合わせ中は `answered.first` で見る。** 初めての回答の直後にはもう
+ * `answeredKanjiIds` に字が入っているので、`includes` だけで判定すると
+ * 初回の答え合わせ中に `Try again` が出てしまう。
+ */
+export function isRetry(session: ReviewSession): boolean {
+  if (session.current === null) {
+    return false;
+  }
+
+  if (session.answered !== null) {
+    return !session.answered.first;
+  }
+
+  return session.answeredKanjiIds.includes(session.current.kanji.id);
+}
+
 function shuffle<T>(items: T[], rng: () => number): T[] {
   const result = [...items];
 

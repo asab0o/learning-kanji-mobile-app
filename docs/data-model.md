@@ -112,6 +112,17 @@ stage = fold(events.filter(e => e.kanjiId === id).sortBy(reviewedAt))
 (要件定義書 4.4「ご褒美体験であり成績ではない」)。集計を足したくなったら、それは
 クイズを課題に変える変更なので、まず要件に戻ること。
 
+**1回の出題につき1行。表示した時点で `result = 'shown'` で INSERT し、回答したらその行の
+`result` を1回だけ `correct` / `incorrect` に UPDATE する**(2026-09-13。
+`docs/plans/quiz-and-review-repeats.md`)。
+
+- 表示時点で入れるのは、答えずに抜けた語も「直近に出した」に数えるため。回答時にしか
+  入れていなかったころは、抜けた語が次の回にまた出た
+- 追記のみ(表示と回答で2行)にしないのは、直近 N 行の窓が実質 N/2 語に縮むため
+- `quiz_attempts` は SRS ではないので絶対規則5の対象外。遷移は `shown` → 回答の1方向・1回
+  (`WHERE result = 'shown'`)なので、将来の同期も `updated_at` の後勝ちで状態が戻らない
+- `result` 列に CHECK 制約は無く、`shown` を足してもマイグレーションは出ていない
+
 ## 演出の頻度制限
 
 `reveal_shown` に、読み変化カード(要件定義書 4.6 ステップ2)を出した漢字を記録する。

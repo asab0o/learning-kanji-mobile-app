@@ -211,7 +211,9 @@ export const reviewEvents = sqliteTable(
 export const quizAttempts = sqliteTable('quiz_attempts', {
   id: text('id').primaryKey(),
   itemKey: text('item_key').notNull(),
-  result: text('result', { enum: ['correct', 'incorrect'] }).notNull(),
+  // `shown` = 表示したがまだ答えていない。回答時に1回だけ correct / incorrect へ更新する
+  // (`queries/quiz-attempts.ts`)。列に CHECK 制約は無いので、ここを広げてもマイグレーションは出ない
+  result: text('result', { enum: ['shown', 'correct', 'incorrect'] }).notNull(),
   attemptedAt: integer('attempted_at').notNull(),
   ...timestamps,
 });

@@ -49,8 +49,9 @@ export interface PickQuizItemInput {
   /**
    * `slot: 'lesson'` で**たった今学び終えた漢字**の ID。
    *
-   * これを渡さないと「その日に学んだ字」までしか絞れず、`小` を学んだ直後に
-   * 同じ日に学んだ `人` の語が出て唐突に見える(下の `preferForSlot` の注釈)。
+   * **lesson では必須。渡さなければ出題しない**(`pickQuizItem` の 7a)。
+   * 別の字の語で埋めると、`食` の回に `日本語` が出るように唐突に見える。
+   * `slot: 'review'` では使わない。
    */
   focusKanjiId?: string;
   now: number;
@@ -78,7 +79,7 @@ export function pickQuizItem({
   const excludedWords = [...new Set(reencounterWords)];
   const recent = new Set(recentItemKeys.slice(0, RECENT_ITEM_MEMORY));
 
-  /** 構成字 → その字を導入した時刻。slot の寄せ方(下の `preferForSlot`)で使う */
+  /** 構成字 → その字を導入した時刻。復習直後の寄せ方(下の `preferForReview`)で使う */
   const learnedAtByCharacter = new Map<string, number>();
 
   for (const entry of kanji) {
@@ -162,15 +163,34 @@ export function pickQuizItem({
     return null;
   }
 
-  // 6. 直近に出した語を避ける。全滅したら**この条件だけ**落とす
+  // 6. 直近に出した語を避ける
   const fresh = candidates.filter((candidate) => !recent.has(candidate.itemKey));
-  const pool = fresh.length > 0 ? fresh : candidates;
 
-  // 7. slot に応じて寄せる。同点は rng で選ぶ
-  const preferred = preferForSlot({
-    pool,
-    slot,
-    focusCharacter: kanji.find((entry) => entry.id === focusKanjiId)?.character,
+  // 7a. 学習直後は**たった今学んだ字を含む語だけ**。無ければ出さない。
+  //
+  //     条件を落として別の字の語を出すと、`食` の回に `日本語` が出るように唐突に見える
+  //     (要件4.4 が学習直後の枠を「今さっき絵と意味を見た字なので推測が効く」と
+  //     説明している意図から外れる)。直近回避も落とさない。`外出` しか候補の無い
+  //     `外` → `出` の回で、同じ語が2回続くため
+  //     (docs/plans/quiz-and-review-repeats.md。`guess-quiz.md` 差分2 の取り下げ)
+  if (slot === 'lesson') {
+    const focusCharacter = kanji.find((entry) => entry.id === focusKanjiId)?.character;
+
+    if (focusCharacter === undefined) {
+      return null;
+    }
+
+    const focused = fresh.filter((item) =>
+      item.components.some((component) => component.character === focusCharacter)
+    );
+
+    return focused.length === 0 ? null : shuffle(focused, rng)[0];
+  }
+
+  // 7b. 復習直後は、直近回避が全滅したら**この条件だけ**落とし、時間軸で寄せる。
+  //     同点は rng で選ぶ
+  const preferred = preferForReview({
+    pool: fresh.length > 0 ? fresh : candidates,
     learnedAtByCharacter,
     now,
   });
@@ -222,45 +242,24 @@ function foldLearnedAt(learned: LearnedKanji[]): Map<string, number> {
 }
 
 /**
- * 難易度を時間軸で寄せる(差分2)。
+ * 復習直後の難易度を時間軸で寄せる(`guess-quiz.md` 差分2)。
  *
- * - `lesson`(学習直後) = **たった今学んだ字**を含む語。無ければその日に学んだ字を含む語
- * - `review`(復習直後) = **既習字を今日より前に学んでいる**語。記憶から引き出させる
+ * **既習字を今日より前に学んでいる**語を優先する。記憶から引き出させる枠なので。
  *
- * **`lesson` で「今学んだ字」を最優先にするのは、それが無いと唐突に感じるから。**
- * 1日3字学ぶので「その日に学んだ字」だけを条件にすると、`小` の回を終えた直後に
- * 同じ日に学んだ `人` の語(`人間`)が出る。要件4.4 が学習直後の枠を
- * 「**今さっき絵と意味を見た字**なので推測が効く」と説明している意図から外れる
- * (2026-09-06 の実機確認で判明)。
- *
- * **寄せるだけで、絞り込んで空にはしない。** 該当が無ければ次の段に落ちる。
- * 該当ゼロで null を返すと、初日の `review` のように「条件は満たすのに何も出ない」が起きる。
+ * **寄せるだけで、絞り込んで空にはしない。** 該当が無ければ候補全体から出す。
+ * 該当ゼロで null を返すと、初日の復習のように「条件は満たすのに何も出ない」が起きる。
+ * 学習直後(`lesson`)はこの関数を通らない。そちらは空なら出さない(`pickQuizItem` の 7a)。
  */
-function preferForSlot({
+function preferForReview({
   pool,
-  slot,
-  focusCharacter,
   learnedAtByCharacter,
   now,
 }: {
   pool: QuizItem[];
-  slot: QuizSlot;
-  focusCharacter: string | undefined;
   learnedAtByCharacter: Map<string, number>;
   now: number;
 }): QuizItem[] {
   const today = startOfLocalDay(now);
-
-  // 1段目: たった今学んだ字を含む語(`小` → `小川`)
-  if (slot === 'lesson' && focusCharacter !== undefined) {
-    const focused = pool.filter((item) =>
-      item.components.some((component) => component.character === focusCharacter)
-    );
-
-    if (focused.length > 0) {
-      return focused;
-    }
-  }
 
   const matched = pool.filter((item) => {
     const learnedDays: number[] = [];
@@ -278,9 +277,7 @@ function preferForSlot({
       return false;
     }
 
-    return slot === 'lesson'
-      ? learnedDays.some((day) => day === today)
-      : learnedDays.every((day) => day < today);
+    return learnedDays.every((day) => day < today);
   });
 
   return matched.length > 0 ? matched : pool;
