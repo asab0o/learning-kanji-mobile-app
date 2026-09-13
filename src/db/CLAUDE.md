@@ -19,6 +19,8 @@ Drizzle ORM + expo-sqlite。設計の背景は `docs/data-model.md`。
    導入を `review_events` の `correct` で代用するとステージが最初から1段ずれる。
    現在のステージはイベントを畳み込んで求める。
    `kanji_progress` を置く場合、それはいつ捨てても再構築できるキャッシュ
+   - `quiz_attempts` は SRS ではないので例外。**`result` を `shown` → `correct`/`incorrect` に
+     1回だけ UPDATE してよい**(それ以外の UPDATE と DELETE は書かない。`docs/data-model.md`)
 5. **推測クイズの結果を `review_events` に書かない。** `quiz_attempts` に入れる。
    要件定義書 4.4 の「結果は SRS に入れない」に反する
 6. **`src/db/migrations/` を手で編集しない。** `npm run db:generate` で生成する。

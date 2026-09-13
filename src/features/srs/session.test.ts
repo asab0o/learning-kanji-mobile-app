@@ -4,6 +4,7 @@ import {
   advanceReviewSession,
   answerReviewSession,
   createReviewSession,
+  isRetry,
 } from '@/features/srs/session';
 
 const kanji = (id: string, meaning: string, order: number): KanjiEntry => ({
@@ -192,5 +193,62 @@ describe('advanceReviewSession', () => {
     const session = start(2);
 
     expect(advanceReviewSession({ state: session, pool: POOL, rng: seeded(16) })).toBe(session);
+  });
+});
+
+describe('isRetry', () => {
+  const wrongOf = (session: ReturnType<typeof start>) =>
+    session.choices.find((choice) => choice !== session.current?.kanji.meaning) ?? '';
+
+  it('作ったばかりのセッションでは false', () => {
+    expect(isRetry(start(3))).toBe(false);
+  });
+
+  it('初めて出た字を不正解にした直後(答え合わせ中)は false', () => {
+    const session = start(3);
+
+    expect(isRetry(answerReviewSession(session, wrongOf(session)))).toBe(false);
+  });
+
+  it('不正解の字が末尾から戻ってきたら true、そこで答えた後も true のまま', () => {
+    let session = start(1);
+    const target = session.current;
+
+    session = advanceReviewSession({
+      state: answerReviewSession(session, wrongOf(session)),
+      pool: POOL,
+      rng: seeded(19),
+    });
+
+    expect(session.current?.kanji.id).toBe(target?.kanji.id);
+    expect(isRetry(session)).toBe(true);
+    expect(isRetry(answerReviewSession(session, target?.kanji.meaning ?? ''))).toBe(true);
+  });
+
+  it('1件目を不正解にしたあと、次に出た別の字は false', () => {
+    let session = start(2);
+    const first = session.current;
+
+    session = advanceReviewSession({
+      state: answerReviewSession(session, wrongOf(session)),
+      pool: POOL,
+      rng: seeded(20),
+    });
+
+    expect(session.current?.kanji.id).not.toBe(first?.kanji.id);
+    expect(isRetry(session)).toBe(false);
+  });
+
+  it('全問終えたら false', () => {
+    let session = start(1);
+
+    session = advanceReviewSession({
+      state: answerReviewSession(session, session.current?.kanji.meaning ?? ''),
+      pool: POOL,
+      rng: seeded(21),
+    });
+
+    expect(session.current).toBeNull();
+    expect(isRetry(session)).toBe(false);
   });
 });

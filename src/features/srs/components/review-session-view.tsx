@@ -14,6 +14,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Reading } from '@/content/types';
+import { isRetry } from '@/features/srs/session';
 import type { ReviewSession } from '@/features/srs/session';
 import { useRomajiEnabled } from '@/features/settings';
 import { useTheme } from '@/theme';
@@ -126,6 +127,12 @@ export function ReviewSessionView({
       ) : (
         <>
           <View style={styles.prompt}>
+            {/* 不正解で戻ってきた字だと分かるようにする。同じ字が2回出るとバグに見えるため
+                (2026-09-13 の実機報告)。色を negative にしないのは罰に見せないため。
+                答え合わせ中も出したままにして、ラベルが点滅しないようにする */}
+            {isRetry(session) ? (
+              <Text style={[styles.retry, { color: theme.accent }]}>Try again</Text>
+            ) : null}
             <Text
               style={{
                 fontFamily: theme.type.minchoBold,
@@ -276,6 +283,10 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: 13,
+  },
+  retry: {
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
   choices: {
     gap: 10,

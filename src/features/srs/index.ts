@@ -20,7 +20,12 @@ export type {
   TodaysLessonItem,
   TodaysLessons,
 } from './lessons';
-export { BURNED_STAGE, foldKanjiStates, planTodaysReviews, REVIEW_INTERVAL_DAYS } from './scheduler';
+export {
+  BURNED_STAGE,
+  foldKanjiStates,
+  planTodaysReviews,
+  REVIEW_INTERVAL_DAYS,
+} from './scheduler';
 export type {
   KanjiReviewState,
   PlanTodaysReviewsInput,
@@ -29,7 +34,7 @@ export type {
   TodaysReviews,
 } from './scheduler';
 export { buildMeaningChoices, MEANING_CHOICE_COUNT } from './choices';
-export { advanceReviewSession, answerReviewSession, createReviewSession } from './session';
+export { advanceReviewSession, answerReviewSession, createReviewSession, isRetry } from './session';
 export type { ReviewAnswer, ReviewSession } from './session';
 export { TodayView } from './components/today-view';
 export { ReviewSessionView } from './components/review-session-view';

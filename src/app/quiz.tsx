@@ -1,19 +1,14 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import {
-  listKanji,
-  listLessonEvents,
-  listRecentQuizAttempts,
-  listSentences,
-  listWords,
-} from '@/db';
-import {
   buildQuizChoices,
+  loadQuizInput,
+  newQuizAttemptId,
   pickQuizItem,
   QuizView,
-  RECENT_ITEM_MEMORY,
-  recordQuizAttempt,
+  recordQuizAnswer,
+  recordQuizShown,
 } from '@/features/quiz';
 import type { QuizSlot } from '@/features/quiz';
 
@@ -36,41 +31,56 @@ export default function QuizScreen() {
   }>();
   const rawSlot = Array.isArray(params.slot) ? params.slot[0] : params.slot;
   const slot: QuizSlot = rawSlot === 'review' ? 'review' : 'lesson';
-  // 学習直後だけ付く。たった今学び終えた字を含む語を最優先で出すため
+  // 学習直後だけ付く。たった今学び終えた字を含む語だけを出すため
   const focusKanjiId = Array.isArray(params.kanji) ? params.kanji[0] : params.kanji;
 
   // 描画の中で直接クエリを呼ぶと React Compiler にメモ化されるので、遅延初期化で1回だけ読む
-  // (`src/app/index.tsx` と同じ)。出題と4択はここで確定し、以後作り直さない
-  const [{ item, choices }] = useState(() => read(slot, focusKanjiId));
+  // (`src/app/index.tsx` と同じ)。出題と4択と記録用の ID はここで確定し、以後作り直さない。
+  // StrictMode で初期化関数が2回呼ばれても、使われるのは片方の結果だけ
+  const [{ item, choices, attemptId }] = useState(() => read(slot, focusKanjiId));
   const [choicesShown, setChoicesShown] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
 
   /**
-   * 選択肢を選んだとき。
+   * 語を表示したことを記録する。**答えずに Back やスワイプで抜けても「直近に出した」に数える**
+   * ため、選択肢を押す前のこの時点で書く(2026-09-13 の実機報告。抜けた語が次の回にまた出た)。
+   *
+   * **初期化関数や setState の updater の中では書かない**(理由は `src/app/review.tsx`)。
+   * StrictMode では effect が2回走るが、同じ `attemptId` への INSERT は主キーで弾かれて
+   * 1行しか入らない(`insertQuizShown`)。
+   */
+  useEffect(() => {
+    if (item === null || attemptId === null) {
+      return;
+    }
+
+    recordQuizShown({ id: attemptId, itemKey: item.itemKey });
+  }, [attemptId, item]);
+
+  /**
+   * 選択肢を選んだとき。表示時に入れた行の `result` を1回だけ更新する。
    *
    * **書き込みを `setState` の updater function の中に入れない。** React は updater を
    * 副作用の無い純粋な関数として扱い、必要なら複数回呼ぶ(このリポジトリは
    * `reactCompiler: true` なので、その純粋性は最適化の前提でもある)。
-   * 中で書くと1回の回答で `quiz_attempts` に2行入り、「同じ問題を続けて出さない」の窓が
-   * 静かに1つぶんずれる。理由の詳細は `src/app/review.tsx` の同じ箇所のコメント。
+   * 理由の詳細は `src/app/review.tsx` の同じ箇所のコメント。
    *
-   * **`review_events` には書かない**(絶対規則10)。ここで記録するのは
-   * 「この語を出した」ことだけで、正誤は復習の出題日に一切影響しない。
+   * **`review_events` には書かない**(絶対規則10)。正誤は復習の出題日に一切影響しない。
    */
   const select = useCallback(
     (choice: string) => {
-      if (item === null || selected !== null) {
+      if (item === null || attemptId === null || selected !== null) {
         return;
       }
 
-      recordQuizAttempt({
-        itemKey: item.itemKey,
+      recordQuizAnswer({
+        id: attemptId,
         result: choice === item.meaning ? 'correct' : 'incorrect',
       });
 
       setSelected(choice);
     },
-    [item, selected]
+    [item, attemptId, selected]
   );
 
   /**
@@ -101,33 +111,14 @@ export default function QuizScreen() {
 }
 
 function read(slot: QuizSlot, focusKanjiId: string | undefined) {
-  const sentences = listSentences();
-  const words = listWords();
-  const lessons = listLessonEvents();
-
-  const item = pickQuizItem({
-    words,
-    kanji: listKanji(),
-    // 第2段階の演出語。ここを渡し忘れると、演出回に着く前にクイズが答えを明かす
-    // (docs/plans/guess-quiz.md 差分3)
-    reencounterWords: sentences.flatMap((sentence) =>
-      sentence.reencounters.map((reencounter) => reencounter.word)
-    ),
-    // 第2段階専用の回は新出漢字が無い(`kanjiId` が null)ので、そこは既習に数えない
-    learned: lessons.flatMap((lesson) =>
-      lesson.kanjiId === null ? [] : [{ kanjiId: lesson.kanjiId, completedAt: lesson.completedAt }]
-    ),
-    completedSentenceIds: lessons.map((lesson) => lesson.sentenceId),
-    recentItemKeys: listRecentQuizAttempts(RECENT_ITEM_MEMORY).map((attempt) => attempt.itemKey),
-    slot,
-    focusKanjiId,
-    // 描画中に `Date.now()` を呼ぶと不純になる(react-hooks/purity)ので、
-    // 遅延初期化のここで1回だけ取る
-    now: Date.now(),
-  });
+  // 描画中に `Date.now()` を呼ぶと不純になる(react-hooks/purity)ので、
+  // 遅延初期化のここで1回だけ取る
+  const input = loadQuizInput({ slot, focusKanjiId, now: Date.now() });
+  const item = pickQuizItem(input);
 
   return {
     item,
-    choices: item === null ? [] : buildQuizChoices({ target: item, words }),
+    choices: item === null ? [] : buildQuizChoices({ target: item, words: input.words }),
+    attemptId: item === null ? null : newQuizAttemptId(),
   };
 }

@@ -30,9 +30,21 @@ export type { LessonEvent, NewLessonEvent } from '@/db/queries/lesson-events';
 export { insertReviewEvent, listReviewEvents } from '@/db/queries/review-events';
 export type { NewReviewEvent, ReviewEvent, ReviewResult } from '@/db/queries/review-events';
 
-// 推測クイズの記録。SRS とは別系統で、成績には使わない(絶対規則10)
-export { insertQuizAttempt, listRecentQuizAttempts } from '@/db/queries/quiz-attempts';
-export type { NewQuizAttempt, QuizAttempt, QuizResult } from '@/db/queries/quiz-attempts';
+// 推測クイズの記録。SRS とは別系統で、成績には使わない(絶対規則10)。
+// 表示時に INSERT、回答時にその行を1回だけ UPDATE する
+export {
+  insertQuizShown,
+  listRecentQuizAttempts,
+  newQuizAttemptId,
+  updateQuizAttemptResult,
+} from '@/db/queries/quiz-attempts';
+export type {
+  NewQuizShown,
+  QuizAnswerResult,
+  QuizAnswerUpdate,
+  QuizAttempt,
+  QuizResult,
+} from '@/db/queries/quiz-attempts';
 
 // 設定
 export { getUserSettings, updateUserSettings } from '@/db/queries/user-settings';

@@ -63,7 +63,8 @@ const input = (overrides: Partial<PickQuizItemInput> = {}): PickQuizItemInput =>
   learned: [{ kanjiId: 'k-person', completedAt: YESTERDAY }],
   completedSentenceIds: [],
   recentItemKeys: [],
-  slot: 'lesson',
+  // 既定は review。lesson は focusKanjiId が無いと出題しないので、ふるいのテストが全部 null になる
+  slot: 'review',
   now: NOW,
   rng: seeded(1),
   ...overrides,
@@ -198,15 +199,11 @@ describe('pickQuizItem', () => {
     expect(item?.surface).toBe('人間');
   });
 
-  it('slot=lesson は、その日に学んだ字を含む語を優先する', () => {
+  it('slot=lesson は、今学んだ字を渡さなければ候補があっても出さない', () => {
     const item = pickQuizItem(
       input({
-        words: [
-          word('w1', 'k-person', '人間', 'human being'),
-          word('w2', 'k-fire', '花火', 'fireworks'),
-        ],
+        words: [word('w2', 'k-fire', '花火', 'fireworks')],
         learned: [
-          { kanjiId: 'k-person', completedAt: YESTERDAY },
           { kanjiId: 'k-fire', completedAt: NOW },
           { kanjiId: 'k-flower', completedAt: NOW },
         ],
@@ -214,10 +211,23 @@ describe('pickQuizItem', () => {
       })
     );
 
-    expect(item?.surface).toBe('花火');
+    expect(item).toBeNull();
   });
 
-  it('slot=lesson は、たった今学んだ字を含む語を最優先にする', () => {
+  it('slot=lesson は、今学んだ字がマスタに無ければ出さない', () => {
+    const item = pickQuizItem(
+      input({
+        words: [word('w2', 'k-fire', '花火', 'fireworks')],
+        learned: [{ kanjiId: 'k-fire', completedAt: NOW }],
+        slot: 'lesson',
+        focusKanjiId: 'k-unknown',
+      })
+    );
+
+    expect(item).toBeNull();
+  });
+
+  it('slot=lesson は、たった今学んだ字を含む語を返す', () => {
     // `小` を学び終えた直後に、同じ日に学んだ `人` の語が出ると唐突に見える
     const item = pickQuizItem(
       input({
@@ -239,7 +249,8 @@ describe('pickQuizItem', () => {
     expect(item?.surface).toBe('花火');
   });
 
-  it('今学んだ字を含む語が無ければ、その日に学んだ字の語に落ちる', () => {
+  it('slot=lesson は、今学んだ字を含む語が無ければ、その日に学んだ別の字の語があっても出さない', () => {
+    // `食` の回に `日本語` が出た実機報告(2026-09-13)の形
     const item = pickQuizItem(
       input({
         words: [word('w1', 'k-person', '人間', 'human being')],
@@ -253,7 +264,39 @@ describe('pickQuizItem', () => {
       })
     );
 
-    expect(item?.surface).toBe('人間');
+    expect(item).toBeNull();
+  });
+
+  it('slot=lesson は、今学んだ字の語のうち直近に出していない方を返す', () => {
+    const item = pickQuizItem(
+      input({
+        words: [word('w1', 'k-fire', '花火', 'fireworks'), word('w2', 'k-fire', '火花', 'spark')],
+        learned: [{ kanjiId: 'k-fire', completedAt: NOW }],
+        recentItemKeys: [toItemKey('花火')],
+        slot: 'lesson',
+        focusKanjiId: 'k-fire',
+      })
+    );
+
+    expect(item?.surface).toBe('火花');
+  });
+
+  it('slot=lesson は、今学んだ字の語が全部直近に出ていたら出さない(同じ語を続けない)', () => {
+    // `外` → `出` の回がどちらも `外出` しか持たない実データの形
+    const item = pickQuizItem(
+      input({
+        words: [word('w1', 'k-fire', '花火', 'fireworks')],
+        learned: [
+          { kanjiId: 'k-fire', completedAt: NOW },
+          { kanjiId: 'k-flower', completedAt: NOW },
+        ],
+        recentItemKeys: [toItemKey('花火')],
+        slot: 'lesson',
+        focusKanjiId: 'k-flower',
+      })
+    );
+
+    expect(item).toBeNull();
   });
 
   it('focusKanjiId は slot=review では効かない(復習は記憶から引き出させる枠)', () => {

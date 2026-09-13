@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { getKanji } from '@/db';
+import { loadQuizInput, pickQuizItem } from '@/features/quiz';
 import { KanjiFocus } from '@/features/reading';
 import { completeLesson } from '@/features/srs';
 import { useTheme } from '@/theme';
@@ -36,6 +37,12 @@ export default function KanjiScreen() {
   /**
    * 学習を終えて推測クイズへ送る(要件定義書 4.4「学習直後」)。
    *
+   * **今学んだ字を含む語が無ければ、クイズを開かずに Today へ戻す。** 別の字の語で
+   * 埋めると `食` の回に `日本語` が出るように唐突に見える(2026-09-13 の実機報告。
+   * docs/plans/quiz-and-review-repeats.md)。判定をクイズ画面ではなくここでするのは、
+   * クイズ画面が一瞬映ってから畳まれるちらつきを避けるため。
+   * クイズ画面は同じ `loadQuizInput` から選び直すので、ここで出せるならあちらでも出せる。
+   *
    * `push` ではなく `replace` にするのは、クイズで `Back` を押したときに、
    * 終えたばかりの漢字フォーカスへ戻さないため。入口まで畳む処理はクイズ画面が持つ
    * (`src/app/quiz.tsx` の `done`。間に会話文が挟まっているので1枚ずつは戻さない)。
@@ -47,11 +54,26 @@ export default function KanjiScreen() {
     lessonSentenceId === undefined
       ? undefined
       : () => {
+          // 先に書く。今学んだ字が既習に入っていないと、下の判定で候補に上がらない
           completeLesson({ sentenceId: lessonSentenceId, kanjiId: kanji.id });
 
-          // **今学んだ字を渡す。** 渡さないとクイズは「その日に学んだ字」までしか
-          // 絞れず、1日3字learnedのうち別の字の語が出て唐突に見える
-          // (`features/quiz/selection.ts` の `preferForSlot`)
+          const quizItem = pickQuizItem(
+            loadQuizInput({ slot: 'lesson', focusKanjiId: kanji.id, now: Date.now() })
+          );
+
+          if (quizItem === null) {
+            // 会話文 → 漢字フォーカスと積まれているので、まとめて畳む(`quiz.tsx` の `done` と同じ)
+            if (router.canDismiss()) {
+              router.dismissAll();
+            } else {
+              router.replace('/');
+            }
+
+            return;
+          }
+
+          // **今学んだ字を渡す。** 渡さないとクイズ画面は出題しない
+          // (`features/quiz/selection.ts` の `focusKanjiId`)
           router.replace(`/quiz?slot=lesson&kanji=${kanji.id}`);
         };
 
