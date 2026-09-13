@@ -33,6 +33,18 @@ interface PaywallViewProps {
   onOpenLegalNotice: () => void;
 }
 
+/**
+ * サブスクの名称。**Apple の審査は名称・期間・価格を課金画面に出すことを求める**
+ * (2026-09-13 の Guideline 2.1 Information Needed。docs/plans/paywall-subscription-title.md)。
+ *
+ * **StoreKit から返る商品名を使わない。** ASC の反映待ちでは空で返ることがあり、
+ * オファリングが取れないときは何も出せず、ASC に別言語のローカライズがあると
+ * 英語以外で出る(絶対規則7)。審査の録画で名称が確実に映ることを優先した。
+ *
+ * **ASC のサブスク表示名と `docs/store-listing.md` の SUBSCRIPTION 節の3か所で揃える。**
+ */
+const SUBSCRIPTION_NAME = 'Full Access';
+
 export function PaywallView({
   priceString,
   state,
@@ -85,6 +97,8 @@ export function PaywallView({
       </View>
 
       <View style={styles.priceBlock}>
+        {/* 価格の読み込み中や取得失敗でも消えないよう、分岐の外に置く */}
+        <Text style={[styles.planName, { color: theme.text }]}>{SUBSCRIPTION_NAME}</Text>
         {state === 'loading' ? (
           <ActivityIndicator color={theme.accent} />
         ) : priceString === null ? (
@@ -97,9 +111,12 @@ export function PaywallView({
         {/*
           自動更新であることの明示は Apple の審査要件。
           無料トライアルは設定していないので(要件7章)、その文言は出さない。
+          期間もここで書くのは、価格が取れないと上の `/ month` ごと消えるため
+          (審査は名称・期間・価格を別々の項目として求める)。
         */}
         <Text style={[styles.fineprint, { color: theme.textMuted }]}>
-          Renews automatically until cancelled. Cancel anytime in the App Store.
+          1-month subscription, renews automatically until cancelled. Cancel anytime in the App
+          Store.
         </Text>
       </View>
 
@@ -175,6 +192,10 @@ function Benefit({ text }: { text: string }) {
 }
 
 const styles = StyleSheet.create({
+  planName: {
+    fontSize: 16,
+    letterSpacing: 0.3,
+  },
   content: {
     paddingHorizontal: 24,
     gap: 20,
