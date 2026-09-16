@@ -41,7 +41,9 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 - [x] **特定商取引法に基づく表記を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/tokushoho/
       住所・電話番号は「請求があれば遅滞なく開示」で省略。課金画面からリンク済み
-- [ ] **サブスクをアプリのバージョンと一緒に審査へ出す**
+- [x] **サブスクをアプリのバージョンと一緒に審査へ出す** → 完了(2026-09-16)。
+      再提出した submission に `kanji-premium-monthly`(Subscription)/ `premium-monthly`
+      (Subscription Group)/ `iOS App 1.0.0 (5)` の3項目が並んで Waiting for Review になった
       — **各種類の最初の自動更新サブスクは、新しいアプリバージョンと一緒に提出する必要がある**
       (Apple のヘルプ)。サブスクの画面で「Add for Review」→ submission に
       **アプリのバージョンとサブスクリプショングループを含める**。
@@ -72,7 +74,10 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       **build#3 / `f83d5bf`**(#44 マージ後の main)。外の絵(#43)と改行(#44)が入っている。
       `eas submit` でアップロード済み、Apple の処理待ち。
       build#1 は `fedeb6c` でアイコン差し替え前、build#2 は `05be9a3` で #43 / #44 の前だった。
-      **焼き直しが要るのは、コンテンツかアセットを変えたとき**(どちらもバイナリに焼き込まれる)
+      **焼き直しが要るのは、コンテンツかアセットを変えたとき**(どちらもバイナリに焼き込まれる)。
+      **build#4 は審査に出して 2026-09-13 に 2.1(Information Needed)で差し戻された。**
+      **build#5 / `7993aa0`**(#49 のクイズ修正と #50 の課金画面の名称表示が入っている)を
+      2026-09-15 に上げ、審査の返信に付ける画面録画もこのビルドで撮った
 - [x] **プライバシーポリシーの URL を用意する** → 公開済み(2026-09-09)。
       https://asab0o.github.io/learning-kanji-mobile-app/privacy
       ページの実体は `gh-pages` ブランチ(`privacy/index.html`)。**main には無い。**
@@ -82,7 +87,9 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 - [x] **公開した URL を App Store Connect の2箇所に入れる** → 完了
       - [x] サブスク商品の Privacy Policy URL — 入力済み(2026-09-09 に RevenueCat 経由で確認)
       - [x] App Information 側のアプリ本体の Privacy Policy URL — 設定済み(2026-09-12 に画面で確認)
-- [ ] **Paid Apps Agreement を `Active` にする**(ASC の現行名は `Paid Apps Agreement`)
+- [x] **Paid Apps Agreement を `Active` にする** → 完了。**Effective Date 2026-09-11 で `Active`**
+      を 2026-09-13 に画面で確認した。これでシミュレータでも offerings が引けるようになり、
+      課金画面に価格($2.99 / month)が出る(ASC の現行名は `Paid Apps Agreement`)
       — Business → Agreements。**未締結だと、どの環境でも StoreKit から商品を引けない**
       (offerings が空になる)。シミュレータで offerings が引けなかった原因の本命だった。
       **2026-09-12 時点: `New` → 規約に同意して `Pending User Info` へ。**
@@ -129,7 +136,10 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
       `quiz_attempts` も一致。オンボーディングは1回出て、再起動では出ない。
       **実機の TestFlight 更新では未確認**(JS の差し替えで再現したため、
       アプリ本体の入れ替えは経由していない)
-- [ ] **TestFlight で購入が通ること**。**シミュレータでは確認できない**
+- [x] **TestFlight で購入が通ること** → 完了(2026-09-15、build#5 の実機)。
+      課金画面 → Restore(`Nothing to restore.`)→ 購入 → 第2章の回が Today に出るところまで通った。
+      審査に添付した画面録画がこの経路そのもの。以下は確認前の記録。
+      **シミュレータでは確認できない**
       (`Error fetching offerings` / 「None of the products ... could be fetched」。
       RevenueCat 側の設定は確認済み: `default` offering が current、`$rc_monthly` に
       App Store の商品が紐付いている)。課金画面 → 購入 → 第2章が開く → Restore まで見る
