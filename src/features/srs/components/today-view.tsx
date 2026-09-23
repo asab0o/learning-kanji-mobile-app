@@ -11,6 +11,7 @@
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SectionLabel } from '@/components/section-label';
 import type { KanjiEntry } from '@/content/types';
 import type { TodaysLessonItem, TodaysLessons } from '@/features/srs/lessons';
 import { useTheme } from '@/theme';
@@ -85,17 +86,7 @@ export function TodayView({
       <Reviews dueCount={reviewDueCount} onOpen={onOpenReviews} />
 
       <View style={styles.header}>
-        <Text
-          style={{
-            fontFamily: theme.type.mincho,
-            fontSize: 13,
-            letterSpacing: 0.78,
-            color: theme.text,
-            opacity: 0.78,
-          }}
-        >
-          Today
-        </Text>
+        <SectionLabel>Today</SectionLabel>
         {/*
           上限を外している間は「n of 3」が嘘になるので出さない。
           Infinity を数字として描かないための分岐でもある。

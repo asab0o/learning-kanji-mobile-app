@@ -42,6 +42,9 @@ features/srs/
 └── components/       この feature 専用のUI
 ```
 
+feature をまたいで使う、機能に依存しないUIは `src/components/` に置く
+(例: `section-label.tsx` の小見出し。5画面にコピーされていたスタイルを1つにまとめた)。
+
 **純粋ロジックを `*.ts` に分離し、必ずテストを書く。** テストの主戦場は以下4つ。
 
 1. `srs/scheduler.ts` — ステージ遷移と次回出題日の計算

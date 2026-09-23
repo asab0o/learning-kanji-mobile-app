@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SectionLabel } from '@/components/section-label';
 import type { KanjiEntry, Line, Sentence } from '@/content/types';
 import { CharacterAvatar } from '@/features/reading/character-avatar';
 import { focusCharactersFor } from '@/features/reading/focus';
@@ -81,17 +82,7 @@ export function ConversationView({ sentence, kanji, onBack, onContinue }: Conver
         </View>
 
         <View style={styles.title}>
-          <Text
-            style={{
-              fontFamily: theme.type.mincho,
-              fontSize: 13,
-              letterSpacing: 0.78,
-              color: theme.text,
-              opacity: 0.78,
-            }}
-          >
-            {`Conversation ${sentence.order}`}
-          </Text>
+          <SectionLabel>{`Conversation ${sentence.order}`}</SectionLabel>
           {newKanji === null ? null : (
             <View style={styles.newKanji}>
               <Text
