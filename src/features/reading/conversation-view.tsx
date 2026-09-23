@@ -1,8 +1,12 @@
 /**
  * 会話文1本の表示(要件4.1 の学習ループ 1〜2)。
  *
- * 吹き出し・アバター・英訳の寸法は、退役した `theme-preview.tsx` から数値ごと引き継いでいる。
+ * 吹き出し・アバターの寸法は、退役した `theme-preview.tsx` から数値ごと引き継いでいる。
  * 実機で合わせた値なので作り直さない(docs/plans/conversation-screen.md)。
+ *
+ * **英訳とローマ字の文字サイズだけは例外。** 引き継いだ 11.5pt は iPhone mini の実機で
+ * 「読ませる文にしては小さすぎる」と指摘されたので、英訳を 14pt、補助のローマ字を 13pt に上げた
+ * (docs/plans/legibility-quick-wins.md)。
  *
  * 第2段階の回では、読みが変わる字が光り、演出行に★が付いて押せるようになる
  * (要件定義書 4.6 ステップ1・2)。何を光らせ、どの行に★を出すかは `revealFor()` が決める。
@@ -317,12 +321,13 @@ const styles = StyleSheet.create({
   alignRight: {
     textAlign: 'right',
   },
+  // ローマ字は英訳より一段小さくして、どちらが主かを残す
   romaji: {
-    fontSize: 11.5,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 19,
   },
   translation: {
-    fontSize: 11.5,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
