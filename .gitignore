@@ -60,9 +60,9 @@ coverage/
 # 漢字イラストの生成物置き場(rembg 前の入力)。成果物は assets/kanji/ に入れる
 assets/temp/
 
-# illustration-cutout スクリプト(Python)。uv.lock で再現するので環境とキャッシュは無視
-scripts/illustration-cutout/.venv/
-scripts/illustration-cutout/.python-version
-scripts/illustration-cutout/__pycache__/
-scripts/illustration-cutout/.pytest_cache/
+# scripts/ 以下の Python ツール。uv.lock で再現するので環境とキャッシュは無視
+scripts/*/.venv/
+scripts/*/.python-version
+scripts/*/__pycache__/
+scripts/*/.pytest_cache/
 .pytest_cache/

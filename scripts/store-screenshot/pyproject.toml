@@ -1,0 +1,11 @@
+[project]
+name = "store-screenshot"
+version = "0"
+description = "Frame simulator screenshots with a headline for the App Store listing. Dev-only, never imported by the app."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pillow>=10.4,<13",
+]
+
+[tool.uv]
+package = false
