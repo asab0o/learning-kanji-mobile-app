@@ -13,12 +13,19 @@ export type { CompleteLessonInput } from './complete-lesson';
 export { recordReview } from './record-review';
 export type { RecordReviewInput } from './record-review';
 export { addLocalDays, isSameLocalDay, startOfLocalDay } from './day';
-export { DAILY_NEW_KANJI_LIMIT, planTodaysLessons } from './lessons';
+export {
+  DAILY_NEW_KANJI_GOAL,
+  MORE_NEW_KANJI_STEP,
+  planTodaysLessons,
+  requestMoreLessons,
+} from './lessons';
 export type {
   LessonCompletion,
+  MoreLessonsRequest,
   PlanTodaysLessonsInput,
   TodaysLessonItem,
   TodaysLessons,
+  WaitingForStageTwo,
 } from './lessons';
 export {
   BURNED_STAGE,

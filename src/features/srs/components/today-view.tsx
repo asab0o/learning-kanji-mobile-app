@@ -1,8 +1,9 @@
 /**
  * 入口画面「今日の学習」(要件定義書 4.1 / 5.1-8)。
  *
- * 出すのは**今日ぶんだけ**。全58文を並べると「1日3字」の意味が伝わらず、
- * 先を読み進める遊びになってしまう(ADR-0003 が防ごうとしているのがそれ)。
+ * 出すのは**今日ぶんだけ**。1日3字は目標で、達成したら祝いと樹を主役にし、
+ * 続けたい人には控えめな `Learn N more kanji` を出す(ADR-0011)。全58文を並べないのは、
+ * 目標という区切りが見えなくなり、第2段階の「翌日以降に戻る」も崩れるため。
  *
  * 何を出すかは `planTodaysLessons()` が決める。ここは描くだけで、
  * ルーティングも DB も知らない。
@@ -40,9 +41,11 @@ interface TodayViewProps {
   metKanjiCount?: number;
   totalKanjiCount?: number;
   onOpenTrees?: () => void;
-  /** 開発ビルドの上限解除。`__DEV__` のときだけ渡す */
-  ignoreLimit?: boolean;
-  onChangeIgnoreLimit?: (value: boolean) => void;
+  /** 「もう3字」を押したとき。渡らない呼び出し側ではリンクを出さない */
+  onLearnMore?: () => void;
+  /** 開発ビルドの制限解除(目標の枠と第2段階の翌日規則)。`__DEV__` のときだけ渡す */
+  devUnrestricted?: boolean;
+  onChangeDevUnrestricted?: (value: boolean) => void;
 }
 
 export function TodayView({
@@ -56,8 +59,9 @@ export function TodayView({
   metKanjiCount,
   totalKanjiCount,
   onOpenTrees,
-  ignoreLimit,
-  onChangeIgnoreLimit,
+  onLearnMore,
+  devUnrestricted,
+  onChangeDevUnrestricted,
 }: TodayViewProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -71,6 +75,26 @@ export function TodayView({
   // 無料ぶんを学び切ったかどうかで導線の強さを変える。
   // 学び切っていれば、そこが行き止まりなのでカードで受け止める。
   const freeExhausted = lessons.allDone;
+  // 目標の内と外を分けて描く。外の行は目標達成カードの**下**に並べ、
+  // 「目標は3のまま、その先はおまけ」を位置で伝える
+  const withinGoal = lessons.items.filter((item) => !item.beyondGoal);
+  const beyondGoal = lessons.items.filter((item) => item.beyondGoal);
+  // 翌日規則で止まった理由は、今日の分をやり終えてから言う。始める前に「明日戻る」と
+  // 言っても、その字をまだ学んでいない
+  const comesBack =
+    pending.length === 0 && lessons.waitingFor !== null
+      ? comesBackTomorrow(lessons.waitingFor.kanjiIds, kanjiById)
+      : null;
+  const renderRow = (item: TodaysLessonItem) => (
+    <Row
+      key={item.sentence.id}
+      item={item}
+      newKanji={
+        item.sentence.newKanjiId === null ? null : (kanjiById.get(item.sentence.newKanjiId) ?? null)
+      }
+      onPress={() => onSelect(item.sentence.id)}
+    />
+  );
 
   return (
     <ScrollView
@@ -88,31 +112,37 @@ export function TodayView({
       <View style={styles.header}>
         <SectionLabel>Today</SectionLabel>
         {/*
-          上限を外している間は「n of 3」が嘘になるので出さない。
-          Infinity を数字として描かないための分岐でもある。
+          分母は目標で固定する。追加で開いた字を分母に足すと「6 of 6」になり、
+          目標が引き上がったように見える(ADR-0011)。達成後は字数だけを数える。
         */}
-        {Number.isFinite(lessons.remaining) ? (
-          <Text style={[styles.progress, { color: theme.textMuted }]}>
-            {`${lessons.learnedToday} of ${lessons.learnedToday + lessons.remaining} kanji today`}
-          </Text>
-        ) : null}
+        <Text style={[styles.progress, { color: theme.textMuted }]}>
+          {lessons.goalMet
+            ? `Goal met · ${lessons.learnedToday} kanji today`
+            : `${lessons.learnedToday} of ${lessons.goal} kanji today`}
+        </Text>
       </View>
 
-      {lessons.items.length === 0 ? null : (
-        <View style={styles.rows}>
-          {lessons.items.map((item) => (
-            <Row
-              key={item.sentence.id}
-              item={item}
-              newKanji={
-                item.sentence.newKanjiId === null
-                  ? null
-                  : (kanjiById.get(item.sentence.newKanjiId) ?? null)
-              }
-              onPress={() => onSelect(item.sentence.id)}
-            />
-          ))}
-        </View>
+      {withinGoal.length === 0 ? null : (
+        <View style={styles.rows}>{withinGoal.map(renderRow)}</View>
+      )}
+
+      {lessons.goalMet ? (
+        <GoalCard
+          learnedKanji={lessons.items
+            .filter((item) => item.done && item.sentence.newKanjiId !== null)
+            .map((item) => kanjiById.get(item.sentence.newKanjiId ?? '')?.character ?? '?')}
+          met={metKanjiCount}
+          total={totalKanjiCount}
+          onOpenTrees={onOpenTrees}
+          // 未完了が残っている間は出さない。押す前に今日の分を終えてもらう
+          moreCount={pending.length === 0 && lessons.waitingFor === null ? lessons.moreCount : 0}
+          onLearnMore={onLearnMore}
+          comesBack={comesBack}
+        />
+      ) : null}
+
+      {beyondGoal.length === 0 ? null : (
+        <View style={styles.rows}>{beyondGoal.map(renderRow)}</View>
       )}
 
       {/*
@@ -124,6 +154,7 @@ export function TodayView({
         <Notice
           lessons={lessons}
           hasKanji={kanji.length > 0}
+          comesBack={comesBack}
           /*
             ロック中に「全部終えた」と言うのは嘘になる(続きは有料で存在する)。
             代わりに下の Unlock カードが終わりの合図になる。
@@ -151,16 +182,18 @@ export function TodayView({
         <Unlock lockedCount={lockedCount} exhausted={freeExhausted} onPress={onUnlock} />
       ) : null}
 
-      {onChangeIgnoreLimit === undefined ? null : (
+      {onChangeDevUnrestricted === undefined ? null : (
         <View style={styles.debugRow}>
-          <Text style={[styles.debugLabel, { color: theme.textMuted }]}>Ignore daily limit</Text>
+          <Text style={[styles.debugLabel, { color: theme.textMuted }]}>
+            Ignore daily goal and next-day rule
+          </Text>
           <Switch
-            value={ignoreLimit ?? false}
-            onValueChange={onChangeIgnoreLimit}
+            value={devUnrestricted ?? false}
+            onValueChange={onChangeDevUnrestricted}
             trackColor={{ true: theme.accent, false: theme.border }}
             thumbColor={theme.surface}
             ios_backgroundColor={theme.border}
-            accessibilityLabel="Ignore daily limit"
+            accessibilityLabel="Ignore daily goal and next-day rule"
           />
         </View>
       )}
@@ -288,28 +321,136 @@ function Trees({ met, total, onOpen }: { met: number; total: number; onOpen: () 
 function Notice({
   lessons,
   hasKanji,
+  comesBack,
   suppressAllDone,
 }: {
   lessons: TodaysLessons;
   hasKanji: boolean;
+  /** 翌日規則で止まったときの一言。止まっていなければ null */
+  comesBack: string | null;
   suppressAllDone: boolean;
 }) {
   const theme = useTheme();
 
-  // シード前(コンテンツが1件も無い)を「全部終えた」と言わない
+  // シード前(コンテンツが1件も無い)を「全部終えた」と言わない。
+  // 目標を達成した日は GoalCard が終わりの合図になるので、ここでは黙る。
+  // 目標の手前で翌日規則に止められた日(3字/日だと16日目)だけ、ここで理由を言う。
+  // 未達を達成と言い換えない(ADR-0011。ストリークが無いので未達に罰は無い)
   const message = !hasKanji
     ? 'No conversations yet.'
     : lessons.allDone
       ? suppressAllDone
         ? null
         : "You've finished every conversation for now."
-      : "You're done for today. Come back tomorrow.";
+      : !lessons.goalMet && comesBack !== null
+        ? `That's all for today. ${comesBack}`
+        : null;
 
   if (message === null) {
     return null;
   }
 
   return <Text style={[styles.notice, { color: theme.textMuted }]}>{message}</Text>;
+}
+
+/**
+ * 目標達成カード(ADR-0011)。**祝いと樹が主役**で、`Learn N more kanji` は控えめなリンクに留める。
+ * 止めはしないが、勧めもしない。同格のボタンを2つ並べると、続けることを勧めているように見える。
+ *
+ * `N` は押したら実際に並ぶ字数。無料枠の最後や翌日規則の手前では3に満たない(`Learn 1 more kanji`)。
+ */
+function GoalCard({
+  learnedKanji,
+  met,
+  total,
+  onOpenTrees,
+  moreCount,
+  onLearnMore,
+  comesBack,
+}: {
+  learnedKanji: string[];
+  met?: number;
+  total?: number;
+  onOpenTrees?: () => void;
+  moreCount: number;
+  onLearnMore?: () => void;
+  comesBack: string | null;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View
+      style={[
+        styles.goalCard,
+        {
+          backgroundColor: theme.surfaceVeil,
+          borderColor: theme.accent,
+          borderRadius: theme.radius.card,
+        },
+      ]}
+    >
+      <Text style={[styles.cardTitle, { fontFamily: theme.type.minchoBold, color: theme.text }]}>
+        Daily goal met
+      </Text>
+
+      <View style={styles.goalKanji}>
+        {learnedKanji.map((character, index) => (
+          <Text
+            // 同じ字が2回並ぶことは無いが、引けなかった字の '?' は重なりうる
+            key={`${character}-${index}`}
+            style={{ fontFamily: theme.type.minchoBold, fontSize: 24, color: theme.accent }}
+            accessibilityLanguage="ja-JP"
+          >
+            {character}
+          </Text>
+        ))}
+      </View>
+
+      {met !== undefined && total !== undefined ? (
+        <Text style={[styles.goalBody, { color: theme.textMuted }]}>
+          {`${met} of ${total} kanji on your tree`}
+        </Text>
+      ) : null}
+
+      {onOpenTrees === undefined ? null : (
+        <Pressable onPress={onOpenTrees} accessibilityRole="button" hitSlop={8}>
+          {({ pressed }) => (
+            <Text style={[styles.goalCta, { color: theme.accent, opacity: pressed ? 0.6 : 1 }]}>
+              See your kanji tree
+            </Text>
+          )}
+        </Pressable>
+      )}
+
+      {comesBack !== null ? (
+        <Text style={[styles.goalBody, { color: theme.textMuted }]}>{comesBack}</Text>
+      ) : moreCount > 0 && onLearnMore !== undefined ? (
+        <Pressable onPress={onLearnMore} accessibilityRole="button" hitSlop={10}>
+          {({ pressed }) => (
+            <Text style={[styles.moreLink, { color: theme.textMuted, opacity: pressed ? 0.6 : 1 }]}>
+              {`Learn ${moreCount} more kanji`}
+            </Text>
+          )}
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * 翌日規則で止まったときの一言。「◯ comes back tomorrow in a new word.」
+ *
+ * 字を出すのは、明日開く理由を具体的にするため(何が起きるかを予告する)。
+ * 2字同時に読みが変わる回(時間・大学・外国)は「A and B」にする。
+ */
+function comesBackTomorrow(kanjiIds: string[], kanjiById: Map<string, KanjiEntry>): string {
+  const characters = kanjiIds.map((id) => kanjiById.get(id)?.character ?? '?');
+  const subject =
+    characters.length === 1
+      ? `${characters[0]} comes`
+      : `${characters.slice(0, -1).join(', ')} and ${characters[characters.length - 1]} come`;
+
+  return `${subject} back tomorrow in a new word.`;
 }
 
 /**
@@ -352,7 +493,7 @@ function Unlock({
         },
       ]}
     >
-      <Text style={{ fontFamily: theme.type.minchoBold, fontSize: 17, color: theme.text }}>
+      <Text style={[styles.cardTitle, { fontFamily: theme.type.minchoBold, color: theme.text }]}>
         Unlock the next 3 chapters
       </Text>
       <Text style={[styles.unlockBody, { color: theme.textMuted }]}>
@@ -420,6 +561,34 @@ const styles = StyleSheet.create({
   unlockCta: {
     fontSize: 14,
     marginTop: 2,
+  },
+  // 行の高さを明示する。ヒラギノ明朝は日本語向けの字面なので、指定しないと行の箱が
+  // 欧文のディセンダ(g / y / p の下)の分だけ足りず、下端が切れる(2026-09-23 の実機報告)
+  cardTitle: {
+    fontSize: 17,
+    lineHeight: 24,
+  },
+  goalCard: {
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  goalKanji: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  goalBody: {
+    fontSize: 13.5,
+    lineHeight: 20,
+  },
+  goalCta: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  moreLink: {
+    fontSize: 13.5,
   },
   debugRow: {
     flexDirection: 'row',

@@ -53,7 +53,7 @@ Mia has just arrived at her host grandmother's house. Sora the cat is asleep in 
 Then it comes back. Days later the same kanji turns up inside a different word, and its reading has changed. 日 becomes 日曜日. 時 and 間 become 時間. The app stops and shows you what just happened, because that moment is the one that makes kanji feel like meaning rather than shapes.
 
 WHAT A DAY LOOKS LIKE
-- Three new kanji, no more. Each arrives in its own conversation.
+- A goal of three new kanji, and more if you want them. Each arrives in its own conversation.
 - Reviews return on their own schedule, spacing out as you get them right.
 - A short guess after a lesson — can you read this? It never counts against you.
 - Every character you have met grows a tree of the words it appears in.

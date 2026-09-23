@@ -4,7 +4,13 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { listKanji, listLessonEvents, listReviewEvents, listSentences, listWords } from '@/db';
 import { gateSentences, useEntitlement } from '@/features/paywall';
 import { useOnboardingCompleted } from '@/features/settings';
-import { planTodaysLessons, planTodaysReviews, TodayView } from '@/features/srs';
+import {
+  planTodaysLessons,
+  planTodaysReviews,
+  requestMoreLessons,
+  TodayView,
+  type MoreLessonsRequest,
+} from '@/features/srs';
 import { buildTreeIndex } from '@/features/tree';
 
 /**
@@ -21,8 +27,12 @@ import { buildTreeIndex } from '@/features/tree';
  */
 export default function TodayScreen() {
   const router = useRouter();
-  // 開発ビルドでだけ上限を外せる(ADR-0003 の宿題)。リリースには出ない。
-  const [ignoreLimit, setIgnoreLimit] = useState(false);
+  // 開発ビルドでだけ目標の枠と第2段階の翌日規則を外せる。外せないと、第2段階を確かめるのに
+  // 毎回1日待つことになる。リリースには出ない。
+  const [devUnrestricted, setDevUnrestricted] = useState(false);
+  // 「もう3字」を押したこと。**その日だけの UI 状態**で永続化しない(ADR-0011)。
+  // 押した日でなければ `planTodaysLessons()` が無視するので、日をまたいでも持ち越さない
+  const [moreRequest, setMoreRequest] = useState<MoreLessonsRequest | null>(null);
   // 描画の中で直接クエリを呼ぶと React Compiler にメモ化されるので、遅延初期化で1回だけ読む。
   const [snapshot, setSnapshot] = useState(() => read());
 
@@ -55,10 +65,11 @@ export default function TodayScreen() {
     sentences: gated.unlocked,
     completions: snapshot.completions,
     now: snapshot.now,
-    limit: ignoreLimit ? Number.POSITIVE_INFINITY : undefined,
+    moreRequest,
+    unrestricted: devUnrestricted,
   });
 
-  // 復習には1日の上限を掛けない。ADR-0003 が抑えたいのは新規の投入速度で、
+  // 復習には1日の目標も上限も掛けない。1日の字数(ADR-0011)が区切るのは新規の投入で、
   // 復習の件数はその結果として決まる(docs/plans/srs-reviews.md)。
   //
   // **課金ゲートを掛けないのも意図的。** 一度学んだ字は購読が切れても復習に出し続ける
@@ -92,8 +103,10 @@ export default function TodayScreen() {
       metKanjiCount={trees.met.length}
       totalKanjiCount={snapshot.kanji.length}
       onOpenTrees={() => router.push('/trees')}
-      ignoreLimit={__DEV__ ? ignoreLimit : undefined}
-      onChangeIgnoreLimit={__DEV__ ? setIgnoreLimit : undefined}
+      // 押した時刻は表示している計画と同じ「今日」(`snapshot.now`)に揃える
+      onLearnMore={() => setMoreRequest(requestMoreLessons(lessons, snapshot.now))}
+      devUnrestricted={__DEV__ ? devUnrestricted : undefined}
+      onChangeDevUnrestricted={__DEV__ ? setDevUnrestricted : undefined}
     />
   );
 }

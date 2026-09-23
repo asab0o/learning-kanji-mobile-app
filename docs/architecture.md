@@ -25,7 +25,7 @@ src/content/      静的コンテンツ(会話文・漢字マスタ)
 | ディレクトリ | 担当 | 要件定義書 |
 |---|---|---|
 | `features/reading/` | 会話文の表示、ふりがな/ローマ字、漢字ハイライト、読み変化の演出 | 4.1-1〜3, 4.6, 5.2 |
-| `features/srs/` | 間隔反復のステージ計算、今日の出題キュー、1日の学習量上限 | 4.1-4, 5.1-4, 5.1-8 |
+| `features/srs/` | 間隔反復のステージ計算、今日の出題キュー、1日の学習量の目標と第2段階の翌日規則 | 4.1-4, 5.1-4, 5.1-8 |
 | `features/quiz/` | 推測クイズ「読めるかな?」。出題対象の選定、誤答選択肢の生成、種明かし | 4.4 |
 | `features/tree/` | 漢字の樹の SVG 描画、レイアウトパターン選択、一覧グリッド | 4.5 |
 | `features/paywall/` | RevenueCat、購入の復元、章のロック判定。判定は `access.ts`(純粋)、SDK は `purchases.ts`、状態の配布は `entitlement-context.tsx` | 7章 |
@@ -113,7 +113,7 @@ expo-router のファイルベース。`src/app/` にはルーティングと画
 ```
 src/app/_layout.tsx             Stack。テーマの地・背景装飾・DB・設定・購読 Provider を敷く
 src/app/onboarding.tsx          初回だけの3画面(要件5.1-10)。入口画面が未完了なら Redirect で送る
-src/app/index.tsx               今日の学習(1日3字)。入口
+src/app/index.tsx               今日の学習(1日3字が目標。達成後は3字ずつ追加)。入口
 src/app/conversation/[id].tsx   会話文1本
 src/app/kanji/[id].tsx          漢字フォーカス。`?lesson=<文ID>` 付きのときだけ完了 CTA が出る
 src/app/review.tsx              復習セッション(意味の4択)

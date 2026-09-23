@@ -19,7 +19,7 @@ import { ONBOARDING_STEPS, type OnboardingSample } from '@/features/onboarding/s
 // バレル(`@/features/reading`)は conversation-view 経由で `@/db` に到達し、
 // `@/db/client` は import しただけで SQLite を開く。20行目の lessons と同じ理由で深く取る
 import { CharacterAvatar } from '@/features/reading/character-avatar';
-import { DAILY_NEW_KANJI_LIMIT } from '@/features/srs/lessons';
+import { DAILY_NEW_KANJI_GOAL } from '@/features/srs/lessons';
 import { useTheme } from '@/theme';
 
 /** 1画面目に並べる話者。会話文の3人(要件定義書 4.3) */
@@ -64,7 +64,7 @@ export function OnboardingView({ onDone }: OnboardingViewProps) {
 
       <View style={styles.figure}>
         {step.id === 'meet' ? <Cast /> : null}
-        {step.id === 'review' ? <DailyLimit /> : null}
+        {step.id === 'review' ? <DailyGoal /> : null}
         {step.sample === undefined ? null : <ReadingShift sample={step.sample} />}
       </View>
 
@@ -137,18 +137,21 @@ function Cast() {
 }
 
 /**
- * 2画面目: 1日の上限(ADR-0003)。
+ * 2画面目: 1日の目標(ADR-0011)。
  *
- * 数字だけを大きく出す。初日に3字で打ち止めになるのを故障と誤解されないための一画面
- * なので、**上限そのものを図にする**。
+ * 数字だけを大きく出す。**上限ではなく目標**であることを図の中で言い切る。
+ * 以前は初日に3字で打ち止めになるのを故障と誤解されないための一画面だったが、
+ * 今は3字を区切りにして先へも進めるので、「止められる」と読まれないようにする。
  */
-function DailyLimit() {
+function DailyGoal() {
   const theme = useTheme();
 
   return (
-    <View style={styles.limit}>
-      <Text style={[styles.limitNumber, { color: theme.accent }]}>{DAILY_NEW_KANJI_LIMIT}</Text>
-      <Text style={[styles.limitCaption, { color: theme.textMuted }]}>kanji a day</Text>
+    <View style={styles.goal}>
+      <Text style={[styles.goalNumber, { color: theme.accent }]}>{DAILY_NEW_KANJI_GOAL}</Text>
+      <Text style={[styles.goalCaption, { color: theme.textMuted }]}>
+        kanji a day — a goal, not a limit
+      </Text>
     </View>
   );
 }
@@ -230,15 +233,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
-  limit: {
+  goal: {
     alignItems: 'center',
     gap: 4,
   },
-  limitNumber: {
+  goalNumber: {
     fontSize: 96,
     lineHeight: 112,
   },
-  limitCaption: {
+  goalCaption: {
     fontSize: 15,
   },
   shift: {
