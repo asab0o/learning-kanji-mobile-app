@@ -398,7 +398,7 @@ function GoalCard({
         },
       ]}
     >
-      <Text style={{ fontFamily: theme.type.minchoBold, fontSize: 17, color: theme.text }}>
+      <Text style={[styles.cardTitle, { fontFamily: theme.type.minchoBold, color: theme.text }]}>
         Daily goal met
       </Text>
 
@@ -502,7 +502,7 @@ function Unlock({
         },
       ]}
     >
-      <Text style={{ fontFamily: theme.type.minchoBold, fontSize: 17, color: theme.text }}>
+      <Text style={[styles.cardTitle, { fontFamily: theme.type.minchoBold, color: theme.text }]}>
         Unlock the next 3 chapters
       </Text>
       <Text style={[styles.unlockBody, { color: theme.textMuted }]}>
@@ -570,6 +570,12 @@ const styles = StyleSheet.create({
   unlockCta: {
     fontSize: 14,
     marginTop: 2,
+  },
+  // 行の高さを明示する。ヒラギノ明朝は日本語向けの字面なので、指定しないと行の箱が
+  // 欧文のディセンダ(g / y / p の下)の分だけ足りず、下端が切れる(2026-09-23 の実機報告)
+  cardTitle: {
+    fontSize: 17,
+    lineHeight: 24,
   },
   goalCard: {
     borderWidth: 1,
