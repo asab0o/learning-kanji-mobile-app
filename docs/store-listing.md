@@ -17,6 +17,7 @@ Promotional Text だけは**審査なしで差し替えられる**ので、季�
 | Promotional Text | 170 | 下記(156字) |
 | Keywords | 100 | 下記(86字) |
 | Description | 4000 | 下記 |
+| What's New | 4000 | 下記(1.1.0) |
 | Support URL | — | https://asab0o.github.io/learning-kanji-mobile-app/support/ |
 | Privacy Policy URL | — | https://asab0o.github.io/learning-kanji-mobile-app/privacy |
 
@@ -77,6 +78,19 @@ Privacy Policy: https://asab0o.github.io/learning-kanji-mobile-app/privacy
 
 **サブスクの期間と価格を説明文に書くのはガイドライン 3.1.2 の要求。** 法務リンクは
 課金画面(`src/app/paywall.tsx`)と同じ URL にしてある。片方だけ変えない。
+
+## What's New(1.1.0)
+
+```
+Three kanji a day is now a goal, not a limit. Finish your three, see your kanji tree grow, and learn three more whenever you like.
+
+When a kanji you know comes back with a new reading, it now waits for another day, so the change always lands after a night's sleep.
+
+Easier to read: darker secondary text, larger English translations, and the quiz now says in words whether your answer was right.
+```
+
+1段落目が 1日の目標(`docs/plans/daily-goal-soft-cap.md`)、2段落目が第2段階の翌日規則(同)、
+3段落目が読みやすさの改善(`docs/plans/legibility-quick-wins.md`)。**バージョンごとに上書きする。**
 
 ## エレベーターピッチ(要件9章)
 
