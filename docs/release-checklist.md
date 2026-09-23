@@ -178,11 +178,16 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 1.0.0 は公開済み。次の提出は #52(読みやすさの改善)と 1日の目標(`docs/plans/daily-goal-soft-cap.md`)を
 まとめた 1.1.0。**Description とサポートページは、1.1.0 の公開と同時に変えないと 1.0.0 の挙動と食い違う。**
 
-- [ ] **`app.json` の `version` を `1.1.0` に上げる**(ビルド番号は EAS が自動で上げる)
-- [ ] **What's New を書く**(#52 と 1日の目標の両方)
-- [ ] **ASC の Description を差し替える**(`docs/store-listing.md` の `WHAT A DAY LOOKS LIKE` 1行目。
-      `no more` の文面のまま出すと、アプリの挙動と食い違う)
-- [ ] **サポートページの FAQ を差し替える**(`gh-pages` ブランチの `support/index.html`、
+- [x] **`app.json` の `version` を `1.1.0` に上げる**(ビルド番号は EAS が自動で上げる)。`package.json` も揃えた
+- [x] **What's New を書く**(#52 と 1日の目標の両方)→ `docs/store-listing.md` の What's New 節
+- [ ] **`eas build` → `eas submit` で TestFlight に上げる**(`main` の release PR マージ後のコミットから)
+- [ ] **TestFlight の実機(購読済み)で、#53 の未確認項目を見る**。#16 を学んだ日は #17 が並ばず、
+      `日 comes back tomorrow in a new word.` が出ること
+- [ ] **ASC で 1.1.0 のバージョンを作り、ビルドを選んで、What's New と Description を貼って審査に出す**
+      (Description は `WHAT A DAY LOOKS LIKE` 1行目が変わっている。`no more` の文面のまま出すと、
+      アプリの挙動と食い違う)
+- [ ] **ビルドしたコミットに `v1.1.0` のタグを付ける**(`v1.0.0` は `7993aa0` に後付けした)
+- [ ] **公開と同時に、サポートページの FAQ を差し替える**(`gh-pages` ブランチの `support/index.html`、
       「Why can't I learn more than three kanji a day?」)
 
 ---

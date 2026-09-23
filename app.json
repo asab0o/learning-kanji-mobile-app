@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kanji Encounter",
     "slug": "learning-kanji-mobile-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "learningkanjimobileapp",
