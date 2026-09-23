@@ -12,6 +12,7 @@
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SectionLabel } from '@/components/section-label';
 import type { KanjiEntry } from '@/content/types';
 import type { TodaysLessonItem, TodaysLessons } from '@/features/srs/lessons';
 import { useTheme } from '@/theme';
@@ -109,17 +110,7 @@ export function TodayView({
       <Reviews dueCount={reviewDueCount} onOpen={onOpenReviews} />
 
       <View style={styles.header}>
-        <Text
-          style={{
-            fontFamily: theme.type.mincho,
-            fontSize: 13,
-            letterSpacing: 0.78,
-            color: theme.text,
-            opacity: 0.78,
-          }}
-        >
-          Today
-        </Text>
+        <SectionLabel>Today</SectionLabel>
         {/*
           分母は目標で固定する。追加で開いた字を分母に足すと「6 of 6」になり、
           目標が引き上がったように見える(ADR-0011)。達成後は字数だけを数える。

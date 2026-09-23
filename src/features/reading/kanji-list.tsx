@@ -16,6 +16,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SectionLabel } from '@/components/section-label';
 import type { ChapterNumber, KanjiEntry } from '@/content/types';
 import { KanjiIllustration } from '@/features/reading/kanji-illustration';
 import { useTheme } from '@/theme';
@@ -45,17 +46,7 @@ export function KanjiList({ kanji, onSelect }: KanjiListProps) {
         { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 },
       ]}
     >
-      <Text
-        style={{
-          fontFamily: theme.type.mincho,
-          fontSize: 13,
-          letterSpacing: 0.78,
-          color: theme.text,
-          opacity: 0.78,
-        }}
-      >
-        Kanji
-      </Text>
+      <SectionLabel>Kanji</SectionLabel>
 
       {kanji.length === 0 ? (
         <Text style={[styles.empty, { color: theme.textMuted }]}>No kanji yet.</Text>

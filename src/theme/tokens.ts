@@ -69,7 +69,11 @@ export interface Theme {
     pill: number;
   };
   type: {
-    /** 日本語の本文。 */
+    /**
+     * 日本語の本文。**欧文を載せるときは `lineHeight` を指定すること。**
+     * 日本語向けの字面なので、指定しないと g / j / p / y の下が切れる
+     * (小見出しは `@/components/section-label` を使う)。
+     */
     mincho: string;
     /** 日本語の強調・見出し・大きい漢字。 */
     minchoBold: string;

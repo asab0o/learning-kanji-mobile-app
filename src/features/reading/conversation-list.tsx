@@ -17,6 +17,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SectionLabel } from '@/components/section-label';
 import type { KanjiEntry, Sentence } from '@/content/types';
 import { useTheme } from '@/theme';
 
@@ -38,17 +39,7 @@ export function ConversationList({ sentences, kanji, onSelect }: ConversationLis
         { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 },
       ]}
     >
-      <Text
-        style={{
-          fontFamily: theme.type.mincho,
-          fontSize: 13,
-          letterSpacing: 0.78,
-          color: theme.text,
-          opacity: 0.78,
-        }}
-      >
-        Conversations
-      </Text>
+      <SectionLabel>Conversations</SectionLabel>
 
       {sentences.length === 0 ? (
         <Text style={[styles.empty, { color: theme.textMuted }]}>No conversations yet.</Text>

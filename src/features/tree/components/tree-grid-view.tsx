@@ -11,6 +11,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SectionLabel } from '@/components/section-label';
 import type { KanjiEntry } from '@/content/types';
 import { KanjiIllustration } from '@/features/reading';
 import type { TreeIndex, TreeSummary } from '@/features/tree/tree';
@@ -51,17 +52,7 @@ export function TreeGridView({ index, totalKanjiCount, onSelect, onBack }: TreeG
             </Text>
           )}
         </Pressable>
-        <Text
-          style={{
-            fontFamily: theme.type.mincho,
-            fontSize: 13,
-            letterSpacing: 0.78,
-            color: theme.text,
-            opacity: 0.78,
-          }}
-        >
-          Kanji tree
-        </Text>
+        <SectionLabel>Kanji tree</SectionLabel>
       </View>
 
       {index.met.length === 0 ? (
