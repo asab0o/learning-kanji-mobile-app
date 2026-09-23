@@ -1,3 +1,4 @@
+import { contrastRatio } from './contrast';
 import { DEFAULT_THEME_ID, themes } from './themes';
 import type { Theme } from './tokens';
 
@@ -37,6 +38,16 @@ describe('themes', () => {
       expect(typeof theme[colorKey]).toBe('string');
       expect(theme[colorKey]).not.toBe('');
     }
+  });
+
+  // WCAG AA の本文の基準(4.5:1)。`textMuted` は訳文・読みなど**読ませる文字**にも使うので、
+  // 補助的な色でも本文と同じ基準を掛ける(ADR-0010。以前は 2.7:1 で読みにくいと指摘された)。
+  //
+  // 限界: 実際の地は `background` の上に敷く背景画像と `surfaceVeil` のカードなので、
+  // ここで測れるのは近似。画像の上での見え方はシミュレータで確かめる。
+  it.each(entries)('%s: 本文と補助の文字色が地の上で 4.5:1 以上', (_key, theme) => {
+    expect(contrastRatio(theme.text, theme.background)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(theme.textMuted, theme.background)).toBeGreaterThanOrEqual(4.5);
   });
 
   it.each(entries)('%s: 書体トークンが埋まっている', (_key, theme) => {

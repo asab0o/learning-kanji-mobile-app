@@ -17,7 +17,9 @@ export const sakura: Theme = {
   surfaceAlt: '#F6E7EC',
   surfaceVeil: 'rgba(255,255,255,0.72)',
   text: '#453B41',
-  textMuted: 'rgba(69,59,65,0.52)',
+  // デザイン案の 0.52 では地の上で 2.7:1 しかなく、訳文が読めないと指摘された。
+  // 色相はそのままに、本文の基準(4.5:1)を満たすところまで濃くした(ADR-0010)
+  textMuted: 'rgba(69,59,65,0.75)',
   accent: '#D2839C',
   onAccent: '#FFFBF3',
   border: 'rgba(210,131,156,0.2)',

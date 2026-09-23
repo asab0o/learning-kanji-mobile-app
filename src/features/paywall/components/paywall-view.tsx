@@ -157,11 +157,9 @@ export function PaywallView({
         <Pressable onPress={onOpenTerms} accessibilityRole="link" hitSlop={10}>
           <Text style={[styles.legal, { color: theme.textMuted }]}>Terms of Use</Text>
         </Pressable>
-        <Text style={[styles.legal, { color: theme.border }]}>·</Text>
         <Pressable onPress={onOpenPrivacy} accessibilityRole="link" hitSlop={10}>
           <Text style={[styles.legal, { color: theme.textMuted }]}>Privacy Policy</Text>
         </Pressable>
-        <Text style={[styles.legal, { color: theme.border }]}>·</Text>
         {/*
           日本の特定商取引法に基づく表記。リンク先は日本語だが、**ラベルは英語にする**
           (UI文言を英語で統一するのはこのプロジェクトの絶対規則)。
@@ -245,7 +243,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     // 3本目のリンクが増えて、狭い端末では1行に収まらない。折り返させる。
     flexWrap: 'wrap',
-    gap: 10,
+    // リンクの間に区切りの `·` を置かない。折り返すと行末・行頭に点だけが残るため。
+    // 代わりに間隔を広げて区切る。20 は各リンクの hitSlop(10)の和で、
+    // これより狭めると隣のリンクと当たり判定が重なる。
+    gap: 20,
   },
   legal: {
     fontSize: 12,

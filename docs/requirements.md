@@ -298,7 +298,7 @@ The meaning stays: "sky / empty"
 | `surfaceAlt` | `#F6E7EC` | 自分の吹き出し |
 | `surfaceVeil` | `rgba(255,255,255,.72)` | 背景装飾を透かすカード |
 | `text` | `#453B41` | 本文 |
-| `textMuted` | `rgba(69,59,65,.52)` | 訳文・読み・ラベル |
+| `textMuted` | `rgba(69,59,65,.75)` | 訳文・読み・ラベル(ADR-0010 でデザイン案の .52 から濃くした) |
 | `accent` | `#D2839C` | 学習中の漢字のハイライト・主要CTA |
 | `onAccent` | `#FFFBF3` | accent の上に載る文字 |
 | `border` | `rgba(210,131,156,.2)` | 罫線・枠線 |

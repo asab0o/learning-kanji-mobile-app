@@ -144,7 +144,8 @@ export function ReviewSessionView({
             >
               {current.kanji.character}
             </Text>
-            <Text style={[styles.question, { color: theme.textMuted }]}>What does this mean?</Text>
+            {/* 行動を求める文なので、補助の色ではなく本文の色と大きさで出す(`quiz-view.tsx` と同じ) */}
+            <Text style={[styles.question, { color: theme.text }]}>What does this mean?</Text>
           </View>
 
           <View style={styles.choices}>
@@ -169,6 +170,18 @@ export function ReviewSessionView({
 
           {answered === null ? null : (
             <>
+              {/* 正誤を色だけに頼らない(`quiz-view.tsx` と同じ理由)。
+                  不正解の字はこのセッションの末尾でもう一度出る(`session.ts`)ので、
+                  「また出る」は事実として言える */}
+              <Text
+                style={[
+                  styles.verdict,
+                  { color: answered.correct ? theme.positive : theme.negative },
+                ]}
+              >
+                {answered.correct ? 'Correct' : "Not quite. You'll see it again soon."}
+              </Text>
+
               <View style={styles.readings}>
                 {current.kanji.readings.map((reading) => (
                   <ReadingRow key={`${reading.type}-${reading.kana}`} reading={reading} />
@@ -282,7 +295,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   question: {
-    fontSize: 13,
+    fontSize: 17,
   },
   retry: {
     fontSize: 12,
@@ -295,6 +308,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 15,
     borderWidth: 1,
+  },
+  // positive / negative は地の上で 3.6〜4.0:1 しかなく、本文の基準(4.5:1)に届かない。
+  // 19pt の太字にして WCAG の「大きい文字」(基準 3:1)に入れる(ADR-0010 の基準との整合)
+  verdict: {
+    fontSize: 19,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   choiceLabel: {
     fontSize: 15,

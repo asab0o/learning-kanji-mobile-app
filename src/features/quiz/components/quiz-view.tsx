@@ -82,7 +82,8 @@ export function QuizView({
             >
               {item.surface}
             </Text>
-            <Text style={[styles.question, { color: theme.textMuted }]}>
+            {/* 行動を求める文なので、補助の色ではなく本文の色と大きさで出す */}
+            <Text style={[styles.question, { color: theme.text }]}>
               Can you guess what this means?
             </Text>
           </View>
@@ -125,6 +126,18 @@ export function QuizView({
 
           {selected === null ? null : (
             <>
+              {/* 正誤を色だけに頼らない。赤い枠から「たぶん不正解」と推測させていた
+                  (2026-09 のフィードバック)。ご褒美なので責める言葉は使わず、
+                  すぐ下の種明かしを主役に残す(要件定義書 4.4) */}
+              <Text
+                style={[
+                  styles.verdict,
+                  { color: selected === item.meaning ? theme.positive : theme.negative },
+                ]}
+              >
+                {selected === item.meaning ? 'You got it!' : 'Not quite.'}
+              </Text>
+
               <Reveal item={item} />
 
               <Pressable
@@ -287,7 +300,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   question: {
-    fontSize: 13,
+    fontSize: 17,
   },
   choices: {
     gap: 10,
@@ -299,6 +312,13 @@ const styles = StyleSheet.create({
   },
   choiceLabel: {
     fontSize: 15,
+  },
+  // positive / negative は地の上で 3.6〜4.0:1 しかなく、本文の基準(4.5:1)に届かない。
+  // 19pt の太字にして WCAG の「大きい文字」(基準 3:1)に入れる(ADR-0010 の基準との整合)
+  verdict: {
+    fontSize: 19,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   reveal: {
     alignItems: 'center',
