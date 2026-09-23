@@ -117,14 +117,14 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 - [x] **簡易オンボーディング**(5.1-10)→ 完了(`docs/plans/onboarding.md`)。初回起動の3画面
 
 **実装済み**: 会話文セット58文 / 例文表示画面 / 漢字フォーカス画面 / SRS復習 /
-段階的再登場(第1・第2段階) / 1日3字の上限 / 桜テーマ / 英語UI / RevenueCat SDK の初期化 /
+段階的再登場(第1・第2段階) / 1日3字の目標(ADR-0011) / 桜テーマ / 英語UI / RevenueCat SDK の初期化 /
 漢字の樹(一覧グリッド + 1字の樹) / 推測クイズ「読めるかな?」 / 簡易オンボーディング /
 漢字イラスト50枚。
 
 ## 3. 出す前に実機で確かめること
 
 - [ ] **リリースビルド(`__DEV__` が false)で開発用のものが出ないこと**
-      - 入口画面の `Ignore daily limit` トグル
+      - 入口画面の `Ignore daily goal and next-day rule` トグル
       - `learningkanjimobileapp://conversations`(開発用一覧)
       - `learningkanjimobileapp://kanji-list`(同上。**書き漏れていた3つ目のルート**)
       - イラスト未投入のプレースホルダに出る鍵名
@@ -170,6 +170,20 @@ https://revenuecat.github.io/codelabs/shipaton-2026-prep.html)。**提出まで�
 - [ ] **App Privacy の質問票に答える**(データ収集の申告。サーバーを持たず、
       通信は RevenueCat の購入時のみ)
 - [ ] **年齢レーティングの質問に答える**
+
+---
+
+## 5. 1.1.0 を出すときにやること
+
+1.0.0 は公開済み。次の提出は #52(読みやすさの改善)と 1日の目標(`docs/plans/daily-goal-soft-cap.md`)を
+まとめた 1.1.0。**Description とサポートページは、1.1.0 の公開と同時に変えないと 1.0.0 の挙動と食い違う。**
+
+- [ ] **`app.json` の `version` を `1.1.0` に上げる**(ビルド番号は EAS が自動で上げる)
+- [ ] **What's New を書く**(#52 と 1日の目標の両方)
+- [ ] **ASC の Description を差し替える**(`docs/store-listing.md` の `WHAT A DAY LOOKS LIKE` 1行目。
+      `no more` の文面のまま出すと、アプリの挙動と食い違う)
+- [ ] **サポートページの FAQ を差し替える**(`gh-pages` ブランチの `support/index.html`、
+      「Why can't I learn more than three kanji a day?」)
 
 ---
 

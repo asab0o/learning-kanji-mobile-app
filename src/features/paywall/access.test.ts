@@ -123,13 +123,28 @@ describe('gateSentences', () => {
 describe('gateSentences feeding planTodaysLessons', () => {
   const now = new Date(2026, 8, 3, 12).getTime();
 
-  it('never offers a paid sentence while locked, even with the daily limit to spare', () => {
+  it('never offers a paid sentence while locked, even with the daily goal to spare', () => {
     const gated = gateSentences({ sentences: catalogue, unlocked: false });
 
     const lessons = planTodaysLessons({ sentences: gated.unlocked, completions: [], now });
 
-    // 上限は3字。無料は2文しか無いので枠は余るが、第2章は1件も入らない
+    // 目標は3字。無料は2文しか無いので枠は余るが、第2章は1件も入らない
     expect(lessons.items.map((item) => item.sentence.id)).toEqual(['s1', 's2']);
+  });
+
+  it('never offers a paid sentence while locked, however many times "more" is pressed', () => {
+    const gated = gateSentences({ sentences: catalogue, unlocked: false });
+
+    // 「もう3字」を何回ぶん押したことにしても、入力に有料の文が無い以上は出ようがない
+    const lessons = planTodaysLessons({
+      sentences: gated.unlocked,
+      completions: [],
+      now,
+      moreRequest: { requestedAt: now, openedCount: 99 },
+    });
+
+    expect(lessons.items.map((item) => item.sentence.id)).toEqual(['s1', 's2']);
+    expect(lessons.moreCount).toBe(0);
   });
 
   it('offers the paid sentences once unlocked', () => {

@@ -16,7 +16,7 @@
  * `steps.test.ts` が両方を機械で見張っている。
  */
 
-import { DAILY_NEW_KANJI_LIMIT } from '@/features/srs/lessons';
+import { DAILY_NEW_KANJI_GOAL } from '@/features/srs/lessons';
 
 export type OnboardingStepId = 'meet' | 'review' | 'return';
 
@@ -46,11 +46,11 @@ export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
   },
   {
     id: 'review',
-    title: `${DAILY_NEW_KANJI_LIMIT} kanji a day, then review`,
-    // 上限を本文に書くのは要件に無い判断。初日に打ち止めになるのを故障と
-    // 誤解されるため(docs/plans/onboarding.md 先に確認したい点2)。
-    // ADR-0003 で上限を変えたらここも変わるよう、定数から組み立てている。
-    body: `You learn up to ${DAILY_NEW_KANJI_LIMIT} new kanji a day, then meet them again in short reviews. Sometimes we show you a word you have never seen and let you guess what it means.`,
+    title: `Aim for ${DAILY_NEW_KANJI_GOAL} kanji a day`,
+    // 1日の字数を本文に書くのは要件に無い判断(docs/plans/onboarding.md 先に確認したい点2)。
+    // 上限から目標に変えたので(ADR-0011)、「3字で止められる」ではなく
+    // 「3字が区切りで、その先も進める」ことを伝える。値が変わっても追従するよう定数から組み立てる。
+    body: `Your daily goal is ${DAILY_NEW_KANJI_GOAL} new kanji. Want more? Keep going. You meet each one again in short reviews, and sometimes we show you a word you have never seen and let you guess what it means.`,
   },
   {
     id: 'return',
