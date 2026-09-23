@@ -103,14 +103,16 @@ pnpm run ios
 
 ### 3. 任意の会話文・漢字を開く
 
-入口画面は**1日3字**しか出さない(ADR-0003)ので、確認したい回に上から辿り着けないことがある。
+入口画面は**今日の分**しか出さない(1日3字が目標で、第2段階の回は翌日以降。ADR-0011)ので、
+確認したい回に上から辿り着けないことがある。
 直接開く手段が2つある。
 
 - **開発用の会話文一覧**: `learningkanjimobileapp://conversations`(`__DEV__` ビルドのみ)
 - **ディープリンク**: `learningkanjimobileapp://conversation/<会話文のULID>` /
   `learningkanjimobileapp://kanji/<漢字のULID>`。ULID は `src/content/index.ts` の `S` / `K` マップ
 
-入口画面の `Ignore daily limit` トグル(開発ビルドのみ)を ON にすると、未完了の回が全件並ぶ。
+入口画面の `Ignore daily goal and next-day rule` トグル(開発ビルドのみ)を ON にすると、
+目標の枠と第2段階の翌日規則が外れ、未完了の回が全件並ぶ。
 
 ### 4. 止める
 

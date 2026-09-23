@@ -9,7 +9,7 @@
  */
 
 import { ONBOARDING_STEPS } from '@/features/onboarding/steps';
-import { DAILY_NEW_KANJI_LIMIT } from '@/features/srs/lessons';
+import { DAILY_NEW_KANJI_GOAL } from '@/features/srs/lessons';
 
 /** 印字可能な ASCII だけでできているか。日本語が混じれば false */
 function isAscii(value: string): boolean {
@@ -57,10 +57,13 @@ describe('ONBOARDING_STEPS', () => {
     }
   });
 
-  it('1日の上限を本文に書いてある(ADR-0003 を変えたら文言も直す)', () => {
+  it('1日の目標を本文に書いてあり、上限の言い方をしていない(ADR-0011)', () => {
     const review = ONBOARDING_STEPS.find((step) => step.id === 'review');
 
-    expect(review?.body).toContain(String(DAILY_NEW_KANJI_LIMIT));
-    expect(review?.title).toContain(String(DAILY_NEW_KANJI_LIMIT));
+    expect(review?.body).toContain(String(DAILY_NEW_KANJI_GOAL));
+    expect(review?.title).toContain(String(DAILY_NEW_KANJI_GOAL));
+    expect(review?.body).toContain('goal');
+    // 「up to 3」は上限の言い方。目標に変えたあとに残ると、アプリの挙動と食い違う
+    expect(review?.body).not.toContain('up to');
   });
 });
