@@ -7,14 +7,14 @@ module.exports = defineConfig([
   expoConfig,
   prettierConfig,
   {
-    // scripts/illustration-cutout/.venv は uv が作る Python 仮想環境。中に lint 対象の
+    // scripts/*/.venv は uv が作る Python 仮想環境。中に lint 対象の
     // JS が混ざる(urllib3 の emscripten worker 等)ので除外する。スクリプト本体は .py なので影響なし
     ignores: [
       'dist/*',
       '.expo/*',
       'node_modules/*',
       'src/db/migrations/*',
-      'scripts/illustration-cutout/.venv/**',
+      'scripts/*/.venv/**',
     ],
   },
   {

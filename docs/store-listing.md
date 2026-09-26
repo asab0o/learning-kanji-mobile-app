@@ -14,7 +14,7 @@ Promotional Text だけは**審査なしで差し替えられる**ので、季�
 |---|---|---|
 | App Name | 30 | `Kanji Encounter` |
 | Subtitle | 30 | 下記(26字) |
-| Promotional Text | 170 | 下記(156字) |
+| Promotional Text | 170 | 下記(154字) |
 | Keywords | 100 | 下記(86字) |
 | Description | 4000 | 下記 |
 | What's New | 4000 | 下記(1.1.0) |
@@ -32,7 +32,7 @@ Meet kanji in conversation
 ## Promotional Text
 
 ```
-Chapter one is free: ten kanji, ten conversations. Meet a character inside a scene, review it the next day, and watch its reading change when it comes back.
+Chapter one is free: 10 kanji, 10 conversations. Meet a character inside a scene, review it the next day, and watch its reading change when it comes back.
 ```
 
 ## Keywords
@@ -49,12 +49,12 @@ japanese,jlpt,n5,furigana,hiragana,srs,spaced,review,vocabulary,reading,beginner
 ```
 Kanji Encounter teaches the first fifty kanji the way you actually meet them: inside a conversation.
 
-Mia has just arrived at her host grandmother's house. Sora the cat is asleep in a basket. Every lesson is a short exchange between the three of them, and somewhere in it sits a character you have not met before — with furigana above it, an English line below, and romaji if you want it.
+Mia has just arrived at her host grandmother's house in Japan. Sora the cat is asleep in a basket. Every lesson is a short exchange between the three of them, and somewhere in it sits a character you have not met before — with furigana above it, an English line below, and romaji if you want it.
 
-Then it comes back. Days later the same kanji turns up inside a different word, and its reading has changed. 日 becomes 日曜日. 時 and 間 become 時間. The app stops and shows you what just happened, because that moment is the one that makes kanji feel like meaning rather than shapes.
+Then it comes back. Days later, the same kanji turns up inside a different word, and its reading has changed. "日" becomes "日曜日". "時" and "間" become "時間". The app stops and shows you what just happened, because that moment makes kanji feel like meaning rather than shapes.
 
 WHAT A DAY LOOKS LIKE
-- A goal of three new kanji, and more if you want them. Each arrives in its own conversation.
+- Learning 3 new kanji is your daily goal — once you hit it, you can keep learning a few more at a time.
 - Reviews return on their own schedule, spacing out as you get them right.
 - A short guess after a lesson — can you read this? It never counts against you.
 - Every character you have met grows a tree of the words it appears in.
@@ -82,15 +82,15 @@ Privacy Policy: https://asab0o.github.io/learning-kanji-mobile-app/privacy
 ## What's New(1.1.0)
 
 ```
-Three kanji a day is now a goal, not a limit. Finish your three, see your kanji tree grow, and learn three more whenever you like.
-
-When a kanji you know comes back with a new reading, it now waits for another day, so the change always lands after a night's sleep.
-
-Easier to read: darker secondary text, larger English translations, and the quiz now says in words whether your answer was right.
+What's new:
+- Easier-to-read translations and quiz feedback
+- Daily kanji goal is now a gentle nudge, not a hard cutoff — keep going once you've met it
+- Small visual fixes and polish
 ```
 
-1段落目が 1日の目標(`docs/plans/daily-goal-soft-cap.md`)、2段落目が第2段階の翌日規則(同)、
-3段落目が読みやすさの改善(`docs/plans/legibility-quick-wins.md`)。**バージョンごとに上書きする。**
+1行目が読みやすさの改善(`docs/plans/legibility-quick-wins.md`)、2行目が 1日の目標
+(`docs/plans/daily-goal-soft-cap.md`。第2段階の翌日規則も含む)、3行目が Mincho ラベルの
+文字切れ修正(#55)。**バージョンごとに上書きする。**
 
 ## エレベーターピッチ(要件9章)
 
@@ -106,8 +106,9 @@ A kanji app where you meet the character inside a conversation, then watch its r
 
 ## スクリーンショット
 
-**1320 × 2868**(iPhone 6.9インチ)。これを入れておけば小さい端末には Apple が縮小して使う。
-iPad は不要(`supportsTablet` を有効にしていないため)。
+**ASC に入れるのは 1284 × 2778**(iPhone 6.5インチの枠)。ASC にある iPhone の枠はこれだけで、
+1320 × 2868 を入れると「1242 × 2688 / 1284 × 2778 のどちらか」と弾かれる(2026-09-23)。
+小さい端末には Apple がこの枠から縮小して使う。iPad は不要(`supportsTablet` を有効にしていないため)。
 
 **並べる順。検索結果に出るのは最初の2〜3枚**なので、そこに差別化を置く。
 
@@ -119,18 +120,28 @@ iPad は不要(`supportsTablet` を有効にしていないため)。
 | 4 | 1字の樹(人) | Every kanji grows a tree of words |
 | 5 | 推測クイズ(大雨) | Guess before you know |
 
+**1.1.0 で撮り直したのは 1 と 5 だけ**(2026-09-23)。#52 で翻訳の文字と問いの文が大きく濃くなり、
+見た目の差が大きかった2枚。2〜4 はグレーが少し濃くなった程度なので、1.0.0 の画像のまま。
+
 **装飾版を選んだ**(2026-09-12)。素のスクショと2種類作って比べた結果で、理由は
 **「読みが変わる」カードは見出しが無いと何のモーダルか分からない**こと。
 
 ### 作り直すときの条件
 
-- シミュレータは **iPhone 17 Pro Max**(スクリーンショットがちょうど 1320 × 2868)
+- シミュレータは **iPhone 17 Pro Max**(スクリーンショットがちょうど 1320 × 2868)。
+  **1320 × 2868 のキャンバスで作ってから、最後に 1284 × 2778 へ縮める**(下記)
 - **ステータスバー上端 190px を落とす。** ショットごとに時刻が違うため。
   App Store では一般的な処理で、落とすと締まる
 - 背景は桜テーマのトークンから: 上 `#F6E7EC`(surfaceAlt)→ 下 `#FBF4F4`(background) の縦グラデ。
   文字 `#453B41`(text)、罫 `#D2839C`(accent)
-- 見出しは Georgia 92px、2行、中央揃え。下に 120px の細い罫
-- スクリーンショットは幅80%・角丸56px・影つきで、下端は画面外へ抜く
+- 見出しは Georgia 92px、2行、中央揃え。行の中心が y≈210 / 325。下に 120px の細い罫(y≈425)
+- スクリーンショットは幅80%(1056px)・角丸56px・影つき。上端 y≈500 に置き、
+  **下端まで画面内に収める**(下に 200px ほど背景が残る)
+- **最後に幅 1284 へ等倍縮小し(高さ 2790)、下端の背景 12px を切って 1284 × 2778 にする。**
+  縦横比がわずかに違うので、引き伸ばさずに背景を削る
+- **合成は `scripts/store-screenshot/`**(使い方はその README)。上の寸法はすべてスクリプトに入っている。
+  位置の数値は、ASC に入っている 1.0.0 のサムネイルから測り直したもの(2026-09-23)。
+  1.0.0 のときの元ファイルと作り方は残っていない
 - **有料章の画面を撮るには課金状態が必要。** Test Store キーに一時差し替えして
   テスト購入する(`docs/release-checklist.md` の手順)。**進捗は `lesson_events` に
   直接 INSERT すると速い**(樹に葉を並べるのにタップで学習する必要はない)
