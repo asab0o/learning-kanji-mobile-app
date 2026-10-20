@@ -9,12 +9,15 @@ module.exports = defineConfig([
   {
     // scripts/*/.venv は uv が作る Python 仮想環境。中に lint 対象の
     // JS が混ざる(urllib3 の emscripten worker 等)ので除外する。スクリプト本体は .py なので影響なし
+    // .claude/worktrees は並行セッションの worktree。別ブランチの作業途中のコードを
+    // こちらの check が拾って落ちるので除外する。各 worktree は自分の中で lint される
     ignores: [
       'dist/*',
       '.expo/*',
       'node_modules/*',
       'src/db/migrations/*',
       'scripts/*/.venv/**',
+      '.claude/worktrees/**',
     ],
   },
   {
